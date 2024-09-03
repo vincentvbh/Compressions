@@ -5,7 +5,7 @@
 
 #define KYBER_Q 3329
 
-int16_t round_D(int16_t a, const size_t D){
+int16_t compress_D(int16_t a, const size_t D){
     if(a < 0){
         a += KYBER_Q;
     }
@@ -85,47 +85,47 @@ int16_t Barrett_quotient_11(int16_t a){
 int main(void){
 
     for(int16_t i = -1664; i <= 1664; i++){
-        assert(round_D(i, 1) == Barrett_quotient_1(i));
+        assert(compress_D(i, 1) == Barrett_quotient_1(i));
     }
 
     for(int16_t i = -1664; i <= 1664; i++){
-        assert(round_D(i, 2) == Barrett_quotient_2(i));
+        assert(compress_D(i, 2) == Barrett_quotient_2(i));
     }
 
     for(int16_t i = -1664; i <= 1664; i++){
-        assert(round_D(i, 3) == Barrett_quotient_3(i));
+        assert(compress_D(i, 3) == Barrett_quotient_3(i));
     }
 
     for(int16_t i = -1664; i <= 1664; i++){
-        assert(round_D(i, 4) == Barrett_quotient_4(i));
+        assert(compress_D(i, 4) == Barrett_quotient_4(i));
     }
 
     for(int16_t i = -1664; i <= 1664; i++){
-        assert(round_D(i, 5) == Barrett_quotient_5(i));
+        assert(compress_D(i, 5) == Barrett_quotient_5(i));
     }
 
     for(int16_t i = -1664; i <= 1664; i++){
-        assert(round_D(i, 6) == Barrett_quotient_6(i));
+        assert(compress_D(i, 6) == Barrett_quotient_6(i));
     }
 
     for(int16_t i = -1664; i <= 1664; i++){
-        assert(round_D(i, 7) == Barrett_quotient_7(i));
+        assert(compress_D(i, 7) == Barrett_quotient_7(i));
     }
 
     for(int16_t i = -1664; i <= 1664; i++){
-        assert(round_D(i, 8) == Barrett_quotient_8(i));
+        assert(compress_D(i, 8) == Barrett_quotient_8(i));
     }
 
     for(int16_t i = -1664; i <= 1664; i++){
-        assert(round_D(i, 9) == Barrett_quotient_9(i));
+        assert(compress_D(i, 9) == Barrett_quotient_9(i));
     }
 
     for(int16_t i = -1664; i <= 1664; i++){
-        assert(round_D(i, 10) == Barrett_quotient_10(i));
+        assert(compress_D(i, 10) == Barrett_quotient_10(i));
     }
 
     for(int16_t i = -1664; i <= 1664; i++){
-        assert(round_D(i, 11) == Barrett_quotient_11(i));
+        assert(compress_D(i, 11) == Barrett_quotient_11(i));
     }
 
     printf("Test finished!\n");
