@@ -230,7 +230,6 @@ void poly_compress4_neon(uint8_t r[128], const int16_t a[KYBER_N]){
     int16x8_t mask4 = vdupq_n_s16(0xf);
     int32x4_t zero_int32x4 = {0, 0, 0, 0};
     int8x16_t dot_v = {1, 0, 16, 0, 1, 0, 16, 0, 1, 0, 16, 0, 1, 0, 16, 0};
-    int16x8_t tmp[4];
     int32x4_t dotp[4];
 
     for(size_t i = 0; i < KYBER_N / 32; i++) {
@@ -260,19 +259,10 @@ void poly_compress4_neon(uint8_t r[128], const int16_t a[KYBER_N]){
         tvec[2] = (int16x8_t)vdotq_s32(zero_int32x4, (int8x16_t)tvec[2], dot_v);
         tvec[3] = (int16x8_t)vdotq_s32(zero_int32x4, (int8x16_t)tvec[3], dot_v);
 
-        tmp[0] = (int16x8_t)vtrn1q_s64((int64x2_t)tvec[0], (int64x2_t)tvec[2]);
-        tmp[2] = (int16x8_t)vtrn2q_s64((int64x2_t)tvec[0], (int64x2_t)tvec[2]);
-        tmp[1] = (int16x8_t)vtrn1q_s64((int64x2_t)tvec[1], (int64x2_t)tvec[3]);
-        tmp[3] = (int16x8_t)vtrn2q_s64((int64x2_t)tvec[1], (int64x2_t)tvec[3]);
+        tvec[0] = vmovn_high_s32(vmovn_s32((int32x4_t)tvec[0]), (int32x4_t)tvec[1]);
+        tvec[2] = vmovn_high_s32(vmovn_s32((int32x4_t)tvec[2]), (int32x4_t)tvec[3]);
 
-        tvec[0] = (int16x8_t)vtrn1q_s32((int32x4_t)tmp[0], (int32x4_t)tmp[1]);
-        tvec[1] = (int16x8_t)vtrn2q_s32((int32x4_t)tmp[0], (int32x4_t)tmp[1]);
-        tvec[2] = (int16x8_t)vtrn1q_s32((int32x4_t)tmp[2], (int32x4_t)tmp[3]);
-        tvec[3] = (int16x8_t)vtrn2q_s32((int32x4_t)tmp[2], (int32x4_t)tmp[3]);
-
-        tvec[0] = vtrn1q_s16(tvec[0], tvec[2]);
-        tvec[1] = vtrn1q_s16(tvec[1], tvec[3]);
-        tvec[0] = (int16x8_t)vtrn1q_s8((int8x16_t)tvec[0], (int8x16_t)tvec[1]);
+        tvec[0] = (int16x8_t)vmovn_high_s16(vmovn_s16(tvec[0]), tvec[2]);
 
         vst1q_s16(t[0], tvec[0]);
 
@@ -322,13 +312,7 @@ void poly_compress5_neon(uint8_t r[160], const int16_t a[KYBER_N]){
         tvec[0] = (int16x8_t)vdotq_s32(zero_int32x4, (int8x16_t)tvec[0], dot_v);
         tvec[1] = (int16x8_t)vdotq_s32(zero_int32x4, (int8x16_t)tvec[1], dot_v);
 
-        tmp[0] = (int16x8_t)vtrn1q_s64((int64x2_t)tvec[0], (int64x2_t)tvec[1]);
-        tmp[1] = (int16x8_t)vtrn2q_s64((int64x2_t)tvec[0], (int64x2_t)tvec[1]);
-
-        tvec[0] = (int16x8_t)vtrn1q_s32((int32x4_t)tmp[0], (int32x4_t)tmp[1]);
-        tvec[1] = (int16x8_t)vtrn2q_s32((int32x4_t)tmp[0], (int32x4_t)tmp[1]);
-
-        tvec[0] = vtrn1q_s16(tvec[0], tvec[1]);
+        tvec[0] = vmovn_high_s32(vmovn_s32((int32x4_t)tvec[0]), (int32x4_t)tvec[1]);
 
         tvec[0] = (int16x8_t)vorrq_s32((int32x4_t)vandq_s16(tvec[0], mask_h_lo),
                                        vshrq_n_s32((int32x4_t)vandq_s16(tvec[0], mask_h_hi), 6));
