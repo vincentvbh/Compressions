@@ -1,7 +1,7 @@
 
 CC = gcc
 
-CFLAGS += -O3
+CFLAGS += -Wall -O3
 
 AARCH64_FLAGS = -march=armv8-a+dotprod
 

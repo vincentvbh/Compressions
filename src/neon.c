@@ -299,24 +299,57 @@ void poly_compress4_neon(uint8_t r[128], const int16_t a[KYBER_N]){
 
 void poly_compress5_neon(uint8_t r[160], const int16_t a[KYBER_N]){
 
-    int16x8_t avec, tvec;
+    int16x8_t avec[2], tvec[2];
     int16x8_t mask5 = vdupq_n_s16(0x1f);
+    int16x8_t mask_h_lo = {0x3ff, 0, 0x3ff, 0, 0x3ff, 0, 0x3ff, 0};
+    int16x8_t mask_h_hi = {0, 0x3ff, 0, 0x3ff, 0, 0x3ff, 0, 0x3ff};
+    int32x4_t mask_w_lo = {0xfffff, 0, 0xfffff, 0};
+    int32x4_t mask_w_hi = {0, 0xfffff, 0, 0xfffff};
+    int32x4_t zero_int32x4 = {0, 0, 0, 0};
+    int8x16_t dot_v = {1, 0, 32, 0, 1, 0, 32, 0, 1, 0, 32, 0, 1, 0, 32, 0};
+    int16x8_t tmp[2];
 
-    uint16_t t[8];
-    for(size_t i = 0; i < KYBER_N / 8; i++) {
+    uint16_t t[2][8];
+    for(size_t i = 0; i < KYBER_N / 16; i++) {
 
-        avec = vld1q_s16(a + 8 * i);
-        tvec = vqrdmulhq_n_s16(avec, 315);
-        tvec = vandq_s16(tvec, mask5);
+        avec[0] = vld1q_s16(a + 16 * i + 0 * 8);
+        avec[1] = vld1q_s16(a + 16 * i + 1 * 8);
+        tvec[0] = vqrdmulhq_n_s16(avec[0], 315);
+        tvec[1] = vqrdmulhq_n_s16(avec[1], 315);
+        tvec[0] = vandq_s16(tvec[0], mask5);
+        tvec[1] = vandq_s16(tvec[1], mask5);
 
-        vst1q_s16(t, tvec);
+        tvec[0] = (int16x8_t)vdotq_s32(zero_int32x4, (int8x16_t)tvec[0], dot_v);
+        tvec[1] = (int16x8_t)vdotq_s32(zero_int32x4, (int8x16_t)tvec[1], dot_v);
 
-        r[0] = (t[0] >> 0) | (t[1] << 5);
-        r[1] = (t[1] >> 3) | (t[2] << 2) | (t[3] << 7);
-        r[2] = (t[3] >> 1) | (t[4] << 4);
-        r[3] = (t[4] >> 4) | (t[5] << 1) | (t[6] << 6);
-        r[4] = (t[6] >> 2) | (t[7] << 3);
-        r += 5;
+        tmp[0] = (int16x8_t)vtrn1q_s64((int64x2_t)tvec[0], (int64x2_t)tvec[1]);
+        tmp[1] = (int16x8_t)vtrn2q_s64((int64x2_t)tvec[0], (int64x2_t)tvec[1]);
+
+        tvec[0] = (int16x8_t)vtrn1q_s32((int32x4_t)tmp[0], (int32x4_t)tmp[1]);
+        tvec[1] = (int16x8_t)vtrn2q_s32((int32x4_t)tmp[0], (int32x4_t)tmp[1]);
+
+        tvec[0] = vtrn1q_s16(tvec[0], tvec[1]);
+
+        tvec[0] = (int16x8_t)vorrq_s32((int32x4_t)vandq_s16(tvec[0], mask_h_lo),
+                                       vshrq_n_s32((int32x4_t)vandq_s16(tvec[0], mask_h_hi), 6));
+
+        tvec[0] = (int16x8_t)vorrq_s64((int64x2_t)vandq_s32((int32x4_t)tvec[0], mask_w_lo),
+                                       vshrq_n_s64((int64x2_t)vandq_s32((int32x4_t)tvec[0], mask_w_hi), 12));
+
+        vst1q_s16(t[0], tvec[0]);
+
+        r[0] = t[0][0];
+        r[1] = t[0][0] >> 8;
+        r[2] = t[0][1];
+        r[3] = t[0][1] >> 8;
+        r[4] = t[0][2];
+        r[5] = t[0][4];
+        r[6] = t[0][4] >> 8;
+        r[7] = t[0][5];
+        r[8] = t[0][5] >> 8;
+        r[9] = t[0][6];
+
+        r += 10;
     }
 }
 
