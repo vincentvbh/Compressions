@@ -2,5 +2,7 @@
 **/.DS_Store
 
 **/test
+**/avx2_ref
 **/avx2
+**/neon_ref
 **/neon

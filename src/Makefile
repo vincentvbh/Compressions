@@ -1,7 +1,9 @@
 
 CC = gcc
 
-CFLAGS += -march=native -mcpu=native -O3
+CFLAGS += -O3
+
+AARCH64_FLAGS = -march=armv8-a+dotprod
 
 all: test avx2_ref neon_ref
 
@@ -15,7 +17,7 @@ neon_ref: neon_ref.c
 	$(CC) $(CLFAGS) $< -o $@
 
 neon: neon.c
-	$(CC) $(CLFAGS) $< -o $@
+	$(CC) $(CLFAGS) $(AARCH64_FLAGS) $< -o $@
 
 .PHOYNY: clean
 
