@@ -98,6 +98,32 @@ int16_t Barrett_quotient_11(int16_t a){
     return srshr((mla(sshr(sqdmulh(a, -20553), 1), a, 20)), 5) & 0x7ff;
 }
 
+void poly_compress1(uint8_t r[32], const int16_t a[KYBER_N]){
+
+    unsigned int i,j;
+    int16_t u;
+
+    for(i=0;i<KYBER_N/8;i++) {
+        r[i] = 0;
+        for(j=0;j<8;j++) {
+            u = a[8*i+j];
+
+            // 19-bit precision suffices for round(2 x / q)
+            // inputs are in [-q/2, ..., q/2]
+            // 315 = round(2 * 2^19 / q)
+            u = (int16_t)(((int32_t)u * 315 + (1 << 18)) >> 19) & 1;
+
+            // this is equivalent to first mapping to positive
+            // standard representatives followed by
+            // u = ((((uint16_t)u << 1) + KYBER_Q/2)/KYBER_Q) & 1;
+
+            r[i] |= u << j;
+
+        }
+    }
+
+}
+
 void poly_compress4(uint8_t r[128], const int16_t a[KYBER_N]){
 
     unsigned int j,k;
@@ -221,6 +247,32 @@ void poly_compress11(uint8_t r[352], const int16_t a[KYBER_N]){
         r[10] = (t[7] >>  3);
         r += 11;
     }
+}
+
+void poly_compress1_neon(uint8_t r[32], const int16_t a[KYBER_N]){
+
+    unsigned int i,j;
+    int16_t u;
+
+    for(i=0;i<KYBER_N/8;i++) {
+        r[i] = 0;
+        for(j=0;j<8;j++) {
+            u = a[8*i+j];
+
+            // 19-bit precision suffices for round(2 x / q)
+            // inputs are in [-q/2, ..., q/2]
+            // 315 = round(2 * 2^19 / q)
+            u = (int16_t)(((int32_t)u * 315 + (1 << 18)) >> 19) & 1;
+
+            // this is equivalent to first mapping to positive
+            // standard representatives followed by
+            // u = ((((uint16_t)u << 1) + KYBER_Q/2)/KYBER_Q) & 1;
+
+            r[i] |= u << j;
+
+        }
+    }
+
 }
 
 void poly_compress4_neon(uint8_t r[128], const int16_t a[KYBER_N]){
@@ -461,6 +513,11 @@ int main(void){
         a[i] = rand() % KYBER_Q;
         a[i] -= KYBER_Q / 2;
     }
+
+    poly_compress1(ref, a);
+    poly_compress1_neon(res, a);
+
+    assert(memcmp(ref, res, 32) == 0);
 
     poly_compress4(ref, a);
     poly_compress4_neon(res, a);
