@@ -16,6 +16,9 @@ int16_t pmulhw(const int16_t a, const int16_t b){
 }
 
 int16_t psraw(const int16_t a, const size_t i){
+    if(i == 0){
+        return a;
+    }
     return a >> i;
 }
 
@@ -53,13 +56,15 @@ int16_t Barrett_quotient_5(int16_t a){
     return pmulhrsw(a, 315) & 0x1f;
 }
 
+// 1290167 = -20553 + 20 * 2^16
+
 int16_t Barrett_quotient_10(int16_t a){
     // this doesn't work
     // return ((int16_t)(((int32_t)a * 161271 + (1 << 18)) >> 19)) & 0x3ff;
     // 22-bit suffices for D = 10
     // 1290167 = round(1024 * 2^22 / q)
     // return ((int16_t)(((int32_t)a * 1290167 + (1 << 21)) >> 22)) & 0x3ff;
-    return psraw(pmulhw(a, -20553) + pmullw(a, 19) + a + (1 << 5), 6) & 0x3ff;
+    return psraw(pmulhw(a, -20553) + pmullw(a, 20) + (1 << 5), 6) & 0x3ff;
 
 }
 
@@ -67,7 +72,7 @@ int16_t Barrett_quotient_11(int16_t a){
     // 21-bit suffices for D = 11
     // 1290167 = round(2048 * 2^21 / q)
     // return ((int16_t)(((int32_t)a * 1290167 + (1 << 20)) >> 21)) & 0x7ff;
-    return psraw(pmulhw(a, -20553) + pmullw(a, 19) + a + (1 << 4), 5) & 0x7ff;
+    return psraw(pmulhw(a, -20553) + pmullw(a, 20) + (1 << 4), 5) & 0x7ff;
 }
 
 int main(void){
