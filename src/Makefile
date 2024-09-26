@@ -1,6 +1,8 @@
 
 CC = gcc
 
+CFLAGS += -march=native -mcpu=native -O3
+
 all: test avx2_ref neon_ref
 
 test: test.c
