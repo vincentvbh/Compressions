@@ -6,10 +6,6 @@
 
 #include <arm_neon.h>
 
-// This file assumes the existing of dot product instructions.
-
-// 1, 4, 5, 10, 11
-
 #define KYBER_Q 3329
 
 #define KYBER_N 256
@@ -276,14 +272,14 @@ int16x8_t shift_with_holes_h(int16x8_t a, const int16x8_t mask_lo, const int16x8
 }
 
 static inline
-int32x4_t shift_with_holes_w(int32x4_t a, const int32x4_t mask_lo, const int32x4_t mask_hi, const size_t shift_i){
+int32x4_t shift_with_holes_s(int32x4_t a, const int32x4_t mask_lo, const int32x4_t mask_hi, const size_t shift_i){
     return (int32x4_t)vorrq_s64((int64x2_t)vandq_s32(a, mask_lo),
                                  vshrq_n_s64((int64x2_t)vandq_s32(a, mask_hi), shift_i));
 }
 
 void poly_compress1_neon(uint8_t r[32], const int16_t a[KYBER_N]){
 
-    int16x8_t avec[16], tvec[16];
+    int16x8_t tvec[16];
     int16x8_t mask1 = vdupq_n_s16(0x1);
     int32x4_t zero_int32x4 = {0, 0, 0, 0};
 #if __ARM_FEATURE_DOTPROD
@@ -294,8 +290,8 @@ void poly_compress1_neon(uint8_t r[32], const int16_t a[KYBER_N]){
     for(size_t i = 0; i < KYBER_N / 128; i++){
 
         for(size_t j = 0; j < 16; j++){
-            avec[j] = vld1q_s16(a + i * 128 + 8 * j);
-            tvec[j] = vqdmulhq_n_s16(avec[j], 315);
+            tvec[j] = vld1q_s16(a + i * 128 + 8 * j);
+            tvec[j] = vqdmulhq_n_s16(tvec[j], 315);
             tvec[j] = vrshrq_n_s16(tvec[j], 4);
             tvec[j] = vandq_s16(tvec[j], mask1);
         }
@@ -314,7 +310,6 @@ void poly_compress1_neon(uint8_t r[32], const int16_t a[KYBER_N]){
 
         tvec[0] = (int16x8_t)vmovn_high_s32(vmovn_s32((int32x4_t)tvec[0]), (int32x4_t)tvec[4]);
         tvec[8] = (int16x8_t)vmovn_high_s32(vmovn_s32((int32x4_t)tvec[8]), (int32x4_t)tvec[12]);
-
 
         tvec[0] = (int16x8_t)vmovn_high_s16(vmovn_s16(tvec[0]), tvec[8]);
 
@@ -349,7 +344,7 @@ void poly_compress1_neon(uint8_t r[32], const int16_t a[KYBER_N]){
 void poly_compress4_neon(uint8_t r[128], const int16_t a[KYBER_N]){
 
     uint16_t t[4][8];
-    int16x8_t avec[4], tvec[4];
+    int16x8_t tvec[4];
     int16x8_t mask4 = vdupq_n_s16(0xf);
     int32x4_t zero_int32x4 = {0, 0, 0, 0};
 #if __ARM_FEATURE_DOTPROD
@@ -358,15 +353,15 @@ void poly_compress4_neon(uint8_t r[128], const int16_t a[KYBER_N]){
 
     for(size_t i = 0; i < KYBER_N / 32; i++) {
 
-        avec[0] = vld1q_s16(a + i * 32 + 8 * 0);
-        avec[1] = vld1q_s16(a + i * 32 + 8 * 1);
-        avec[2] = vld1q_s16(a + i * 32 + 8 * 2);
-        avec[3] = vld1q_s16(a + i * 32 + 8 * 3);
+        tvec[0] = vld1q_s16(a + i * 32 + 8 * 0);
+        tvec[1] = vld1q_s16(a + i * 32 + 8 * 1);
+        tvec[2] = vld1q_s16(a + i * 32 + 8 * 2);
+        tvec[3] = vld1q_s16(a + i * 32 + 8 * 3);
 
-        tvec[0] = vqdmulhq_n_s16(avec[0], 315);
-        tvec[1] = vqdmulhq_n_s16(avec[1], 315);
-        tvec[2] = vqdmulhq_n_s16(avec[2], 315);
-        tvec[3] = vqdmulhq_n_s16(avec[3], 315);
+        tvec[0] = vqdmulhq_n_s16(tvec[0], 315);
+        tvec[1] = vqdmulhq_n_s16(tvec[1], 315);
+        tvec[2] = vqdmulhq_n_s16(tvec[2], 315);
+        tvec[3] = vqdmulhq_n_s16(tvec[3], 315);
 
         tvec[0] = vrshrq_n_s16(tvec[0], 1);
         tvec[1] = vrshrq_n_s16(tvec[1], 1);
@@ -427,7 +422,7 @@ void poly_compress4_neon(uint8_t r[128], const int16_t a[KYBER_N]){
 
 void poly_compress5_neon(uint8_t r[160], const int16_t a[KYBER_N]){
 
-    int16x8_t avec[2], tvec[2];
+    int16x8_t tvec[2];
     int16x8_t mask5 = vdupq_n_s16(0x1f);
     int16x8_t mask_h_lo = {0x3ff, 0, 0x3ff, 0, 0x3ff, 0, 0x3ff, 0};
     int16x8_t mask_h_hi = {0, 0x3ff, 0, 0x3ff, 0, 0x3ff, 0, 0x3ff};
@@ -445,10 +440,10 @@ void poly_compress5_neon(uint8_t r[160], const int16_t a[KYBER_N]){
     uint16_t t[2][8];
     for(size_t i = 0; i < KYBER_N / 16; i++) {
 
-        avec[0] = vld1q_s16(a + 16 * i + 8 * 0);
-        avec[1] = vld1q_s16(a + 16 * i + 8 * 1);
-        tvec[0] = vqrdmulhq_n_s16(avec[0], 315);
-        tvec[1] = vqrdmulhq_n_s16(avec[1], 315);
+        tvec[0] = vld1q_s16(a + 16 * i + 8 * 0);
+        tvec[1] = vld1q_s16(a + 16 * i + 8 * 1);
+        tvec[0] = vqrdmulhq_n_s16(tvec[0], 315);
+        tvec[1] = vqrdmulhq_n_s16(tvec[1], 315);
         tvec[0] = vandq_s16(tvec[0], mask5);
         tvec[1] = vandq_s16(tvec[1], mask5);
 
@@ -460,7 +455,7 @@ void poly_compress5_neon(uint8_t r[160], const int16_t a[KYBER_N]){
         tvec[0] = vmovn_high_s32(vmovn_s32((int32x4_t)tvec[0]), (int32x4_t)tvec[1]);
 
         tvec[0] = shift_with_holes_h(tvec[0], mask_h_lo, mask_h_hi, 6);
-        tvec[0] = (int16x8_t)shift_with_holes_w((int32x4_t)tvec[0], mask_w_lo, mask_w_hi, 12);
+        tvec[0] = (int16x8_t)shift_with_holes_s((int32x4_t)tvec[0], mask_w_lo, mask_w_hi, 12);
 
 #else
 
@@ -468,7 +463,7 @@ void poly_compress5_neon(uint8_t r[160], const int16_t a[KYBER_N]){
 
         tvec[0] = (int16x8_t)shift_with_holes_b((int8x16_t)tvec[0], mask_b_lo, mask_b_hi, 3);
         tvec[0] = shift_with_holes_h(tvec[0], mask_h_lo, mask_h_hi, 6);
-        tvec[0] = (int16x8_t)shift_with_holes_w((int32x4_t)tvec[0], mask_w_lo, mask_w_hi, 12);
+        tvec[0] = (int16x8_t)shift_with_holes_s((int32x4_t)tvec[0], mask_w_lo, mask_w_hi, 12);
 
 #endif
 
@@ -510,7 +505,7 @@ void poly_compress10_neon(uint8_t r[320], const int16_t a[KYBER_N]){
         tvec = vandq_s16(tvec, mask10);
 
         tvec = shift_with_holes_h(tvec, mask_h_lo, mask_h_hi, 6);
-        tvec = (int16x8_t)shift_with_holes_w((int32x4_t)tvec, mask_w_lo, mask_w_hi, 12);
+        tvec = (int16x8_t)shift_with_holes_s((int32x4_t)tvec, mask_w_lo, mask_w_hi, 12);
 
         vst1q_s16(t, tvec);
 
@@ -553,7 +548,7 @@ void poly_compress11_neon(uint8_t r[352], const int16_t a[KYBER_N]){
         tvec = vandq_s16(tvec, mask11);
 
         tvec = shift_with_holes_h(tvec, mask_h_lo, mask_h_hi, 5);
-        tvec = (int16x8_t)shift_with_holes_w((int32x4_t)tvec, mask_w_lo, mask_w_hi, 10);
+        tvec = (int16x8_t)shift_with_holes_s((int32x4_t)tvec, mask_w_lo, mask_w_hi, 10);
 
         vst1q_s16(t, tvec);
 
@@ -579,26 +574,6 @@ void poly_compress11_neon(uint8_t r[352], const int16_t a[KYBER_N]){
 }
 
 int main(void){
-
-    // for(int16_t i = -1664; i <= 1664; i++){
-    //     assert(compress_D(i, 1) == Barrett_quotient_1(i));
-    // }
-
-    // for(int16_t i = -1664; i <= 1664; i++){
-    //     assert(compress_D(i, 4) == Barrett_quotient_4(i));
-    // }
-
-    // for(int16_t i = -1664; i <= 1664; i++){
-    //     assert(compress_D(i, 5) == Barrett_quotient_5(i));
-    // }
-
-    // for(int16_t i = -1664; i <= 1664; i++){
-    //     assert(compress_D(i, 10) == Barrett_quotient_10(i));
-    // }
-
-    // for(int16_t i = -1664; i <= 1664; i++){
-    //     assert(compress_D(i, 11) == Barrett_quotient_11(i));
-    // }
 
     int16_t a[KYBER_N];
     uint8_t ref[352], res[352];
