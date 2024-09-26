@@ -257,6 +257,17 @@ int8x16_t shift_with_holes_b(int8x16_t a, const int8x16_t mask_lo, const int8x16
                                  vshrq_n_s16((int16x8_t)vandq_s8(a, mask_hi), shift_i));
 }
 
+static inline
+int8x16_t shift_with_holes_b_lazy(int8x16_t a, const int8x16_t mask_hi, const size_t shift_i){
+    return (int8x16_t)vorrq_s16((int16x8_t)a,
+                                 vshrq_n_s16((int16x8_t)vandq_s8(a, mask_hi), shift_i));
+}
+
+static inline
+int8x16_t shift_with_holes_b_very_lazy(int8x16_t a, const size_t shift_i){
+    return (int8x16_t)vorrq_s16((int16x8_t)a,
+                                 vshrq_n_s16((int16x8_t)a, shift_i));
+}
 
 static inline
 int16x8_t shift_with_holes_h(int16x8_t a, const int16x8_t mask_lo, const int16x8_t mask_hi, const size_t shift_i){
@@ -278,13 +289,6 @@ void poly_compress1_neon(uint8_t r[32], const int16_t a[KYBER_N]){
 #if __ARM_FEATURE_DOTPROD
     int8x16_t dot_v1 = {1, 2, 4, 8, 1, 2, 4, 8, 1, 2, 4, 8, 1, 2, 4, 8};
     int8x16_t dot_v4 = {1, 0, 16, 0, 1, 0, 16, 0, 1, 0, 16, 0, 1, 0, 16, 0};
-#else
-    int8x16_t mask1_h_lo = {0x1, 0, 0x1, 0, 0x1, 0, 0x1, 0, 0x1, 0, 0x1, 0, 0x1, 0, 0x1, 0};
-    int8x16_t mask1_h_hi = {0, 0x1, 0, 0x1, 0, 0x1, 0, 0x1, 0, 0x1, 0, 0x1, 0, 0x1, 0, 0x1};
-    int8x16_t mask2_h_lo = {0x3, 0, 0x3, 0, 0x3, 0, 0x3, 0, 0x3, 0, 0x3, 0, 0x3, 0, 0x3, 0};
-    int8x16_t mask2_h_hi = {0, 0x3, 0, 0x3, 0, 0x3, 0, 0x3, 0, 0x3, 0, 0x3, 0, 0x3, 0, 0x3};
-    int8x16_t mask4_h_lo = {0xf, 0, 0xf, 0, 0xf, 0, 0xf, 0, 0xf, 0, 0xf, 0, 0xf, 0, 0xf, 0};
-    int8x16_t mask4_h_hi = {0, 0xf, 0, 0xf, 0, 0xf, 0, 0xf, 0, 0xf, 0, 0xf, 0, 0xf, 0, 0xf};
 #endif
 
     for(size_t i = 0; i < KYBER_N / 128; i++){
@@ -318,18 +322,18 @@ void poly_compress1_neon(uint8_t r[32], const int16_t a[KYBER_N]){
 
         for(size_t j = 0; j < 16; j += 2){
             tvec[j] = (int16x8_t)vmovn_high_s16(vmovn_s16(tvec[j]), tvec[j + 1]);
-            tvec[j] = (int16x8_t)shift_with_holes_b((int8x16_t)tvec[j], mask1_h_lo, mask1_h_hi, 7);
+            tvec[j] = (int16x8_t)shift_with_holes_b_very_lazy((int8x16_t)tvec[j], 7);
         }
 
         for(size_t j = 0; j < 16; j += 4){
             tvec[j] = (int16x8_t)vmovn_high_s16(vmovn_s16(tvec[j]), tvec[j + 2]);
-            tvec[j] = (int16x8_t)shift_with_holes_b((int8x16_t)tvec[j], mask2_h_lo, mask2_h_hi, 6);
+            tvec[j] = (int16x8_t)shift_with_holes_b_very_lazy((int8x16_t)tvec[j], 6);
         }
 
         tvec[0] = (int16x8_t)vmovn_high_s16(vmovn_s16(tvec[0]), tvec[4]);
         tvec[8] = (int16x8_t)vmovn_high_s16(vmovn_s16(tvec[8]), tvec[12]);
-        tvec[0] = (int16x8_t)shift_with_holes_b((int8x16_t)tvec[0], mask4_h_lo, mask4_h_hi, 4);
-        tvec[8] = (int16x8_t)shift_with_holes_b((int8x16_t)tvec[8], mask4_h_lo, mask4_h_hi, 4);
+        tvec[0] = (int16x8_t)shift_with_holes_b_very_lazy((int8x16_t)tvec[0], 4);
+        tvec[8] = (int16x8_t)shift_with_holes_b_very_lazy((int8x16_t)tvec[8], 4);
 
         tvec[0] = (int16x8_t)vmovn_high_s16(vmovn_s16(tvec[0]), tvec[8]);
 
@@ -350,11 +354,7 @@ void poly_compress4_neon(uint8_t r[128], const int16_t a[KYBER_N]){
     int32x4_t zero_int32x4 = {0, 0, 0, 0};
 #if __ARM_FEATURE_DOTPROD
     int8x16_t dot_v = {1, 0, 16, 0, 1, 0, 16, 0, 1, 0, 16, 0, 1, 0, 16, 0};
-#else
-    int8x16_t mask_b_lo = {0xf, 0, 0xf, 0, 0xf, 0, 0xf, 0, 0xf, 0, 0xf, 0, 0xf, 0, 0xf, 0};
-    int8x16_t mask_b_hi = {0, 0xf, 0, 0xf, 0, 0xf, 0, 0xf, 0, 0xf, 0, 0xf, 0, 0xf, 0, 0xf};
 #endif
-    int32x4_t dotp[4];
 
     for(size_t i = 0; i < KYBER_N / 32; i++) {
 
@@ -395,8 +395,8 @@ void poly_compress4_neon(uint8_t r[128], const int16_t a[KYBER_N]){
         tvec[0] = (int16x8_t)vmovn_high_s16(vmovn_s16(tvec[0]), tvec[1]);
         tvec[2] = (int16x8_t)vmovn_high_s16(vmovn_s16(tvec[2]), tvec[3]);
 
-        tvec[0] = (int16x8_t)shift_with_holes_b((int8x16_t)tvec[0], mask_b_lo, mask_b_hi, 4);
-        tvec[2] = (int16x8_t)shift_with_holes_b((int8x16_t)tvec[2], mask_b_lo, mask_b_hi, 4);
+        tvec[0] = (int16x8_t)shift_with_holes_b_very_lazy((int8x16_t)tvec[0], 4);
+        tvec[2] = (int16x8_t)shift_with_holes_b_very_lazy((int8x16_t)tvec[2], 4);
 
         tvec[0] = (int16x8_t)vmovn_high_s16(vmovn_s16(tvec[0]), tvec[2]);
 

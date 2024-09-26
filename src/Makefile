@@ -3,7 +3,8 @@ CC = gcc
 
 CFLAGS += -Wall -O3
 
-AARCH64_FLAGS = -march=armv8-a+dotprod
+# AARCH64_FLAGS = -march=armv8-a+dotprod
+AARCH64_FLAGS = -march=armv8-a
 
 all: test avx2_ref neon_ref
 
