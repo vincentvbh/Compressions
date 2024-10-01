@@ -7,6 +7,10 @@
 
 #define KYBER_Q 3329
 
+int16_t shadd(const int16_t a, const int16_t b){
+    return (a + b) >> 1;
+}
+
 int16_t mul(const int16_t a, const int16_t b){
     return a * b;
 }
@@ -67,7 +71,7 @@ int16_t Barrett_quotient_4(int16_t a){
     // 16-bit suffices for D = 4
     // 315 = round(16 * 2^16 / q)
     // return ((int16_t)(((int32_t)a * 315 + (1 << 15)) >> 16)) & 0xf;
-    return srshr(sqdmulh(a, 315), 1) & 0xf;
+    return shadd(sqdmulh(a, 315), 1) & 0xf;
 }
 
 int16_t Barrett_quotient_5(int16_t a){
@@ -83,14 +87,14 @@ int16_t Barrett_quotient_10(int16_t a){
     // 22-bit suffices for D = 10
     // 1290167 = round(1024 * 2^22 / q)
     // return ((int16_t)(((int32_t)a * 1290167 + (1 << 21)) >> 22)) & 0x3ff;
-    return srshr((mla(sshr(sqdmulh(a, -20553), 1), a, 20)), 6) & 0x3ff;
+    return srshr((mla(shadd(sqdmulh(a, -20553), 0), a, 20)), 6) & 0x3ff;
 }
 
 int16_t Barrett_quotient_11(int16_t a){
     // 21-bit suffices for D = 11
     // 1290167 = round(2048 * 2^21 / q)
     // return ((int16_t)(((int32_t)a * 1290167 + (1 << 20)) >> 21)) & 0x7ff;
-    return srshr((mla(sshr(sqdmulh(a, -20553), 1), a, 20)), 5) & 0x7ff;
+    return srshr((mla(shadd(sqdmulh(a, -20553), 0), a, 20)), 5) & 0x7ff;
 }
 
 int main(void){
