@@ -5,6 +5,7 @@ CFLAGS += -Wall -O3
 
 # AARCH64_FLAGS = -march=armv8-a+dotprod
 AARCH64_FLAGS = -march=armv8-a
+AVX2_FLAGS =
 
 all: test avx2_ref neon_ref armv7e-m_ref
 
@@ -13,6 +14,9 @@ test: test.c
 
 avx2_ref: avx2_ref.c
 	$(CC) $(CLFAGS) $< -o $@
+
+avx2: avx2.c
+	$(CC) $(CLFAGS) $(AVX2_FLAGS) $< -o $@
 
 neon_ref: neon_ref.c
 	$(CC) $(CLFAGS) $< -o $@
