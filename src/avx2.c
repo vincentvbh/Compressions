@@ -1,11 +1,14 @@
 
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <assert.h>
 
 // 1, 4, 5, 10, 11
 
 #define KYBER_Q 3329
+
+#define KYBER_N 256
 
 int16_t pmullw(const int16_t a, const int16_t b){
     return a * b;

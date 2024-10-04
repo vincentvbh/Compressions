@@ -1,11 +1,11 @@
 
 CC = gcc
 
-CFLAGS += -Wall -O3
+CFLAGS += -Wall -O3 -mtune=native -march=native
 
 # AARCH64_FLAGS = -march=armv8-a+dotprod
 AARCH64_FLAGS = -march=armv8-a
-AVX2_FLAGS =
+AVX2_FLAGS = -mavx2 -z noexecstack
 
 all: test avx2_ref neon_ref armv7e-m_ref
 
