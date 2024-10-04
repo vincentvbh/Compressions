@@ -6,3 +6,4 @@
 **/avx2
 **/neon_ref
 **/neon
+**/armv7e-m_ref
