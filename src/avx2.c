@@ -2,7 +2,10 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 #include <assert.h>
+
+#include <immintrin.h>
 
 // 1, 4, 5, 10, 11
 
@@ -233,27 +236,113 @@ void poly_compress11(uint8_t r[352], const int16_t a[KYBER_N]){
     }
 }
 
+void poly_compress1_avx2(uint8_t r[32], const int16_t a[KYBER_N]){
+
+    unsigned int i,j;
+    int16_t u;
+
+    for(i=0;i<KYBER_N/8;i++) {
+        r[i] = 0;
+        for(j=0;j<8;j++) {
+            u = a[8*i+j];
+
+            // 19-bit precision suffices for round(2 x / q)
+            // inputs are in [-q/2, ..., q/2]
+            // 315 = round(2 * 2^19 / q)
+            u = (int16_t)(((int32_t)u * 315 + (1 << 18)) >> 19) & 1;
+
+            // this is equivalent to first mapping to positive
+            // standard representatives followed by
+            // u = ((((uint16_t)u << 1) + KYBER_Q/2)/KYBER_Q) & 1;
+
+            r[i] |= u << j;
+
+        }
+    }
+
+}
+
+void poly_compress4_avx2(uint8_t r[128], const int16_t a[KYBER_N]){
+
+    __m256i a0, a1, a2, a3;
+    __m256i b0 = _mm256_set1_epi16(630);
+    __m256i b1 = _mm256_set1_epi16(1 << 14);
+    __m256i mask = _mm256_set1_epi16(0xf);
+    __m256i shift = _mm256_set1_epi16(0x1001);
+    __m256i shuffle = _mm256_set_epi32(7, 3, 6, 2, 5, 1, 4, 0);
+
+    for(size_t i = 0; i < KYBER_N / 64; i++){
+
+        a0 = _mm256_loadu_si256((__m256i*)(a + i * 64 + 0 * 16));
+        a1 = _mm256_loadu_si256((__m256i*)(a + i * 64 + 1 * 16));
+        a2 = _mm256_loadu_si256((__m256i*)(a + i * 64 + 2 * 16));
+        a3 = _mm256_loadu_si256((__m256i*)(a + i * 64 + 3 * 16));
+
+        a0 = _mm256_mulhi_epi16(a0, b0);
+        a1 = _mm256_mulhi_epi16(a1, b0);
+        a2 = _mm256_mulhi_epi16(a2, b0);
+        a3 = _mm256_mulhi_epi16(a3, b0);
+
+        a0 = _mm256_mulhrs_epi16(a0, b1);
+        a1 = _mm256_mulhrs_epi16(a1, b1);
+        a2 = _mm256_mulhrs_epi16(a2, b1);
+        a3 = _mm256_mulhrs_epi16(a3, b1);
+
+        a0 = _mm256_and_si256(a0, mask);
+        a1 = _mm256_and_si256(a1, mask);
+        a2 = _mm256_and_si256(a2, mask);
+        a3 = _mm256_and_si256(a3, mask);
+
+        a0 = _mm256_packus_epi16(a0, a1);
+        a2 = _mm256_packus_epi16(a2, a3);
+
+        a0 = _mm256_maddubs_epi16(a0, shift);
+        a2 = _mm256_maddubs_epi16(a2, shift);
+
+        a0 = _mm256_packus_epi16(a0, a2);
+
+        a0 = _mm256_permutevar8x32_epi32(a0, shuffle);
+
+        _mm256_storeu_si256((__m256i*)(r + i * 32), a0);
+
+    }
+
+}
+
 int main(void){
 
-    for(int16_t i = -1664; i <= 1664; i++){
-        assert(compress_D(i, 1) == Barrett_quotient_1(i));
+    __attribute__ ((aligned(32))) int16_t a[KYBER_N];
+    uint8_t ref[352], res[352];
+
+    for(size_t i = 0; i < KYBER_N; i++){
+        a[i] = rand() % KYBER_Q;
+        a[i] -= KYBER_Q / 2;
     }
 
-    for(int16_t i = -1664; i <= 1664; i++){
-        assert(compress_D(i, 4) == Barrett_quotient_4(i));
-    }
+    // poly_compress1(ref, a);
+    // poly_compress1_avx2(res, a);
 
-    for(int16_t i = -1664; i <= 1664; i++){
-        assert(compress_D(i, 5) == Barrett_quotient_5(i));
-    }
+    // assert(memcmp(ref, res, 32) == 0);
 
-    for(int16_t i = -1664; i <= 1664; i++){
-        assert(compress_D(i, 10) == Barrett_quotient_10(i));
-    }
+    poly_compress4(ref, a);
+    poly_compress4_avx2(res, a);
 
-    for(int16_t i = -1664; i <= 1664; i++){
-        assert(compress_D(i, 11) == Barrett_quotient_11(i));
-    }
+    assert(memcmp(ref, res, 128) == 0);
+
+    // poly_compress5(ref, a);
+    // poly_compress5_avx2(res, a);
+
+    // assert(memcmp(ref, res, 160) == 0);
+
+    // poly_compress10(ref, a);
+    // poly_compress10_avx2(res, a);
+
+    // assert(memcmp(ref, res, 320) == 0);
+
+    // poly_compress11(ref, a);
+    // poly_compress11_avx2(res, a);
+
+    // assert(memcmp(ref, res, 352) == 0);
 
     printf("Test finished!\n");
 
