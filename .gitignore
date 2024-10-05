@@ -4,8 +4,10 @@
 **/test
 **/avx2_ref
 **/avx2
+**/jazz_x86.s
+**/jazz_x86
+**/jazz_avx2.s
+**/jazz_avx2
 **/neon_ref
 **/neon
 **/armv7e-m_ref
-**/jazz_x86
-**/jazz_x86.s
