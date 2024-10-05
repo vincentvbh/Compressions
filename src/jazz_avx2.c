@@ -101,7 +101,7 @@ void poly_compress1(uint8_t r[32], const int16_t a[KYBER_N]){
             // 19-bit precision suffices for round(2 x / q)
             // inputs are in [-q/2, ..., q/2]
             // 315 = round(2 * 2^19 / q)
-            u = (int16_t)(((int32_t)u * 315 + (1 << 18)) >> 19) & 1;
+            u = Barrett_quotient_1(u);
 
             // this is equivalent to first mapping to positive
             // standard representatives followed by
@@ -127,7 +127,7 @@ void poly_compress4(uint8_t r[128], const int16_t a[KYBER_N]){
             // 16-bit precision suffices for round(2^4 x / q)
             // inputs are in [-q/2, ..., q/2]
             // 315 = round(16 * 2^16 / q)
-            t[k] = (int16_t)(((int32_t)u * 315 + (1 << 15)) >> 16) & 0xf;
+            t[k] = Barrett_quotient_4(u);
 
             // this is equivalent to first mapping to positive
             // standard representatives followed by
@@ -141,6 +141,7 @@ void poly_compress4(uint8_t r[128], const int16_t a[KYBER_N]){
         r[3] = t[6] | (t[7] << 4);
         r += 4;
     }
+
 }
 
 void poly_compress5(uint8_t r[160], const int16_t a[KYBER_N]){
@@ -156,7 +157,7 @@ void poly_compress5(uint8_t r[160], const int16_t a[KYBER_N]){
             // 15-bit precision suffices for round(2^5 x / q)
             // inputs are in [-q/2, ..., q/2]
             // 315 = round(32 * 2^15 / q)
-            t[k] = (int16_t)(((int32_t)u * 315 + (1 << 14)) >> 15) & 0x1f;
+            t[k] = Barrett_quotient_5(u);
 
             // this is equivalent to first mapping to positive
             // standard representatives followed by
@@ -171,6 +172,7 @@ void poly_compress5(uint8_t r[160], const int16_t a[KYBER_N]){
         r[4] = (t[6] >> 2) | (t[7] << 3);
         r += 5;
     }
+
 }
 
 void poly_compress10(uint8_t r[320], const int16_t a[KYBER_N]){
@@ -186,7 +188,7 @@ void poly_compress10(uint8_t r[320], const int16_t a[KYBER_N]){
             // 22-bit suffices for round(1024 x / q)
             // inputs are in [-q/2, ..., q/2]
             // 1290167 = round(1024 * 2^22 / q)
-            t[k] = ((int16_t)(((int32_t)u * 1290167 + (1 << 21)) >> 22)) & 0x3ff;
+            t[k] = Barrett_quotient_10(u);
 
             // this is equivalent to first mapping to positive
             // standard representatives followed by
@@ -201,6 +203,7 @@ void poly_compress10(uint8_t r[320], const int16_t a[KYBER_N]){
         r[4] = (t[3] >> 2);
         r += 5;
     }
+
 }
 
 void poly_compress11(uint8_t r[352], const int16_t a[KYBER_N]){
@@ -216,7 +219,7 @@ void poly_compress11(uint8_t r[352], const int16_t a[KYBER_N]){
             // 21-bit suffices for round(2048 x / q)
             // inputs are in [-q/2, ..., q/2]
             // 1290167 = round(2048 * 2^21 / q)
-            t[k] = ((int16_t)(((int32_t)u * 1290167 + (1 << 20)) >> 21)) & 0x7ff;
+            t[k] = Barrett_quotient_11(u);
 
             // this is equivalent to first mapping to positive
             // standard representatives followed by
@@ -237,11 +240,8 @@ void poly_compress11(uint8_t r[352], const int16_t a[KYBER_N]){
         r[10] = (t[7] >>  3);
         r += 11;
     }
+
 }
-
-
-
-
 
 int main(void){
 

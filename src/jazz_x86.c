@@ -112,6 +112,7 @@ void poly_compress4(uint8_t r[128], const int16_t a[KYBER_N]){
         r[3] = t[6] | (t[7] << 4);
         r += 4;
     }
+
 }
 
 void poly_compress5(uint8_t r[160], const int16_t a[KYBER_N]){
@@ -142,6 +143,7 @@ void poly_compress5(uint8_t r[160], const int16_t a[KYBER_N]){
         r[4] = (t[6] >> 2) | (t[7] << 3);
         r += 5;
     }
+
 }
 
 void poly_compress10(uint8_t r[320], const int16_t a[KYBER_N]){
@@ -172,6 +174,7 @@ void poly_compress10(uint8_t r[320], const int16_t a[KYBER_N]){
         r[4] = (t[3] >> 2);
         r += 5;
     }
+
 }
 
 void poly_compress11(uint8_t r[352], const int16_t a[KYBER_N]){
@@ -208,11 +211,8 @@ void poly_compress11(uint8_t r[352], const int16_t a[KYBER_N]){
         r[10] = (t[7] >>  3);
         r += 11;
     }
+
 }
-
-
-
-
 
 int main(void){
 
