@@ -265,11 +265,11 @@ void poly_compress1_avx2(uint8_t r[32], const int16_t a[KYBER_N]){
 void poly_compress4_avx2(uint8_t r[128], const int16_t a[KYBER_N]){
 
     __m256i a0, a1, a2, a3;
-    __m256i b0 = _mm256_set1_epi16(630);
-    __m256i b1 = _mm256_set1_epi16(1 << 14);
-    __m256i mask = _mm256_set1_epi16(0xf);
-    __m256i shift = _mm256_set1_epi16(0x1001);
-    __m256i shuffle = _mm256_set_epi32(7, 3, 6, 2, 5, 1, 4, 0);
+    const __m256i b0 = _mm256_set1_epi16(630);
+    const __m256i b1 = _mm256_set1_epi16(1 << 14);
+    const __m256i mask4 = _mm256_set1_epi16(0xf);
+    const __m256i shift = _mm256_set1_epi16((16 << 8) + 1);
+    const __m256i shuffle = _mm256_set_epi32(7, 3, 6, 2, 5, 1, 4, 0);
 
     for(size_t i = 0; i < KYBER_N / 64; i++){
 
@@ -288,10 +288,11 @@ void poly_compress4_avx2(uint8_t r[128], const int16_t a[KYBER_N]){
         a2 = _mm256_mulhrs_epi16(a2, b1);
         a3 = _mm256_mulhrs_epi16(a3, b1);
 
-        a0 = _mm256_and_si256(a0, mask);
-        a1 = _mm256_and_si256(a1, mask);
-        a2 = _mm256_and_si256(a2, mask);
-        a3 = _mm256_and_si256(a3, mask);
+        // below are the same as before
+        a0 = _mm256_and_si256(a0, mask4);
+        a1 = _mm256_and_si256(a1, mask4);
+        a2 = _mm256_and_si256(a2, mask4);
+        a3 = _mm256_and_si256(a3, mask4);
 
         a0 = _mm256_packus_epi16(a0, a1);
         a2 = _mm256_packus_epi16(a2, a3);
@@ -304,6 +305,102 @@ void poly_compress4_avx2(uint8_t r[128], const int16_t a[KYBER_N]){
         a0 = _mm256_permutevar8x32_epi32(a0, shuffle);
 
         _mm256_storeu_si256((__m256i*)(r + i * 32), a0);
+
+    }
+
+}
+
+void poly_compress5_avx2(uint8_t r[128], const int16_t a[KYBER_N]){
+
+    __m256i a0, a1;
+    __m128i lo, hi;
+    const __m256i b0 = _mm256_set1_epi16(315);
+    const __m256i mask5 = _mm256_set1_epi16(0x1f);
+    const __m256i shift1 = _mm256_set1_epi16((32 << 8) + 1);
+    const __m256i shift2 = _mm256_set1_epi32((1024 << 16) + 1);
+    const __m256i sllv_indx = _mm256_set1_epi64x(12);
+    const __m256i shuffle = _mm256_set_epi8( 8, -1, -1, -1, -1, -1,  4,  3,
+                                             2,  1,  0, -1, 12, 11, 10,  9,
+                                            -1, 12, 11, 10,  9,  8, -1, -1,
+                                            -1, -1, -1,  4,  3,  2,  1,  0);
+
+    for(size_t i = 0; i < KYBER_N / 32; i++){
+
+        a0 = _mm256_loadu_si256((__m256i*)(a + i * 32 + 0 * 16));
+        a1 = _mm256_loadu_si256((__m256i*)(a + i * 32 + 1 * 16));
+
+        a0 = _mm256_mulhrs_epi16(a0, b0);
+        a1 = _mm256_mulhrs_epi16(a1, b0);
+
+        // below are the same as before
+        a0 = _mm256_and_si256(a0, mask5);
+        a1 = _mm256_and_si256(a1, mask5);
+
+        a0 = _mm256_packus_epi16(a0, a1);
+
+        a0 = _mm256_maddubs_epi16(a0, shift1);
+        a0 = _mm256_madd_epi16(a0, shift2);
+
+        a0 = _mm256_sllv_epi32(a0, sllv_indx);
+        a0 = _mm256_srli_epi64(a0, 12);
+
+        a0 = _mm256_shuffle_epi8(a0, shuffle);
+
+        lo = _mm256_castsi256_si128(a0);
+        hi = _mm256_extracti128_si256(a0, 1);
+
+        lo = _mm_blendv_epi8(lo, hi, _mm256_castsi256_si128(shuffle));
+
+        _mm_storeu_si128((__m128i*)(r + i * 20 + 0), lo);
+        memcpy(r + i * 20 + 16, &hi, 4);
+
+    }
+
+}
+
+void poly_compress10_avx2(uint8_t r[320], const int16_t a[KYBER_N]){
+
+    __m256i a0;
+    __m256i p0, p1;
+    __m128i lo, hi;
+
+    const __m256i b0 = _mm256_set1_epi16(-20553);
+    const __m256i b1 = _mm256_set1_epi16(20);
+    const __m256i b2 = _mm256_set1_epi16(1 << 9);
+    const __m256i mask10 = _mm256_set1_epi16(0x3ff);
+    const __m256i shift = _mm256_set1_epi32((1024 << 16) + 1);
+    const __m256i sllv_indx = _mm256_set1_epi64x(12);
+    const __m256i shuffle = _mm256_set_epi8( 8,  4,  3,  2,  1,  0, -1, -1,
+                                            -1, -1, -1, -1, 12, 11, 10,  9,
+                                            -1, -1, -1, -1, -1, -1, 12, 11,
+                                            10,  9,  8,  4,  3,  2,  1,  0);
+
+    for(size_t i = 0; i < KYBER_N / 16; i++){
+        a0 = _mm256_loadu_si256((__m256i*)(a + i * 16));
+
+        p0 = _mm256_mulhi_epi16(a0, b0);
+        p1 = _mm256_mullo_epi16(a0, b1);
+        p0 = _mm256_add_epi16(p0, p1);
+        p0 = _mm256_mulhrs_epi16(p0, b2);
+
+        // below are the same as before
+        a0 = _mm256_and_si256(p0, mask10);
+
+        a0 = _mm256_madd_epi16(a0, shift);
+
+        a0 = _mm256_sllv_epi32(a0, sllv_indx);
+        a0 = _mm256_srli_epi64(a0, 12);
+
+        a0 = _mm256_shuffle_epi8(a0, shuffle);
+
+        lo = _mm256_castsi256_si128(a0);
+        hi = _mm256_extracti128_si256(a0, 1);
+
+        lo = _mm_blend_epi16(lo, hi, 0xe0);
+
+        _mm_storeu_si128((__m128i*)(r + i * 20 + 0), lo);
+        memcpy(r + i * 20 + 16, &hi, 4);
+
 
     }
 
@@ -329,15 +426,15 @@ int main(void){
 
     assert(memcmp(ref, res, 128) == 0);
 
-    // poly_compress5(ref, a);
-    // poly_compress5_avx2(res, a);
+    poly_compress5(ref, a);
+    poly_compress5_avx2(res, a);
 
-    // assert(memcmp(ref, res, 160) == 0);
+    assert(memcmp(ref, res, 160) == 0);
 
-    // poly_compress10(ref, a);
-    // poly_compress10_avx2(res, a);
+    poly_compress10(ref, a);
+    poly_compress10_avx2(res, a);
 
-    // assert(memcmp(ref, res, 320) == 0);
+    assert(memcmp(ref, res, 320) == 0);
 
     // poly_compress11(ref, a);
     // poly_compress11_avx2(res, a);
