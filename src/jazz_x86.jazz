@@ -1,0 +1,54 @@
+
+param int KYBER_Q = 3329;
+param int KYBER_N = 256;
+
+export
+fn poly_compress10_x86_jazz(reg u64 r, reg u64 a){
+
+    reg u64 i j;
+    reg u32[4] t;
+    reg u32 b0 = 1290167;
+    inline int k;
+
+    i = 0;
+    j = 0;
+
+    while(i < KYBER_N){
+
+        for k = 0 to 4 {
+            t[k] = (32s)(u16)[a + i * 2];
+            i += 1;
+            t[k] *= 1290167;
+            t[k] += (1 << 21);
+            t[k] >>s= 22;
+            t[k] &= 0x3ff;
+        }
+
+        (u8)[r + j] = t[0];
+        j += 1;
+
+        t[0] >>= 8;
+        t[1] <<= 2;
+        t[0] |= t[1];
+        (u8)[r + j] = t[0];
+        j += 1;
+
+        t[1] >>= 8;
+        t[2] <<= 4;
+        t[1] |= t[2];
+        (u8)[r + j] = t[1];
+        j += 1;
+
+        t[2] >>= 8;
+        t[3] <<= 6;
+        t[2] |= t[3];
+        (u8)[r + j] = t[2];
+        j += 1;
+
+        t[3] >>= 8;
+        (u8)[r + j] = t[3];
+        j += 1;
+
+    }
+
+}

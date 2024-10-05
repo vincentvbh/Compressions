@@ -7,3 +7,5 @@
 **/neon_ref
 **/neon
 **/armv7e-m_ref
+**/jazz_x86
+**/jazz_x86.s

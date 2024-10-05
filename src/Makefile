@@ -7,6 +7,11 @@ CFLAGS += -Wall -O3 -mtune=native -march=native
 AARCH64_FLAGS = -march=armv8-a
 AVX2_FLAGS = -mavx2 -z noexecstack
 
+JASMINC = jasminc
+
+jazz_x86.s: jazz_x86.jazz
+	$(JASMINC) $< -o $@
+
 all: test avx2_ref neon_ref armv7e-m_ref
 
 test: test.c
@@ -17,6 +22,9 @@ avx2_ref: avx2_ref.c
 
 avx2: avx2.c
 	$(CC) $(CLFAGS) $(AVX2_FLAGS) $< -o $@
+
+jazz_x86: jazz_x86.c jazz_x86.jazz jazz_x86.s
+	$(CC) $(CLFAGS) jazz_x86.s $< -o $@
 
 neon_ref: neon_ref.c
 	$(CC) $(CLFAGS) $< -o $@
@@ -35,3 +43,4 @@ clean:
 	rm -f neon_ref
 	rm -f neon
 	rm -f armv7e-m_ref
+	rm -f jazz_x86
