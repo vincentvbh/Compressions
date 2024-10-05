@@ -75,7 +75,7 @@ int16_t Barrett_quotient_4(int16_t a){
     // 16-bit suffices for D = 4
     // 315 = round(16 * 2^16 / q)
     // return ((int16_t)(((int32_t)a * 315 + (1 << 15)) >> 16)) & 0xf;
-    return shadd(sqdmulh(a, 315), 0) & 0xf;
+    return shadd(sqdmulh(a, 315), 1) & 0xf;
 }
 
 int16_t Barrett_quotient_5(int16_t a){
@@ -116,7 +116,7 @@ void poly_compress1(uint8_t r[32], const int16_t a[KYBER_N]){
             // 19-bit precision suffices for round(2 x / q)
             // inputs are in [-q/2, ..., q/2]
             // 315 = round(2 * 2^19 / q)
-            u = (int16_t)(((int32_t)u * 315 + (1 << 18)) >> 19) & 1;
+            u = Barrett_quotient_1(u);
 
             // this is equivalent to first mapping to positive
             // standard representatives followed by
@@ -142,7 +142,7 @@ void poly_compress4(uint8_t r[128], const int16_t a[KYBER_N]){
             // 16-bit precision suffices for round(2^4 x / q)
             // inputs are in [-q/2, ..., q/2]
             // 315 = round(16 * 2^16 / q)
-            t[k] = (int16_t)(((int32_t)u * 315 + (1 << 15)) >> 16) & 0xf;
+            t[k] = Barrett_quotient_4(u);
 
             // this is equivalent to first mapping to positive
             // standard representatives followed by
@@ -171,7 +171,7 @@ void poly_compress5(uint8_t r[160], const int16_t a[KYBER_N]){
             // 15-bit precision suffices for round(2^5 x / q)
             // inputs are in [-q/2, ..., q/2]
             // 315 = round(32 * 2^15 / q)
-            t[k] = (int16_t)(((int32_t)u * 315 + (1 << 14)) >> 15) & 0x1f;
+            t[k] = Barrett_quotient_5(u);
 
             // this is equivalent to first mapping to positive
             // standard representatives followed by
@@ -201,7 +201,7 @@ void poly_compress10(uint8_t r[320], const int16_t a[KYBER_N]){
             // 22-bit suffices for round(1024 x / q)
             // inputs are in [-q/2, ..., q/2]
             // 1290167 = round(1024 * 2^22 / q)
-            t[k] = ((int16_t)(((int32_t)u * 1290167 + (1 << 21)) >> 22)) & 0x3ff;
+            t[k] = (uint16_t)Barrett_quotient_10(u);
 
             // this is equivalent to first mapping to positive
             // standard representatives followed by
@@ -231,7 +231,7 @@ void poly_compress11(uint8_t r[352], const int16_t a[KYBER_N]){
             // 21-bit suffices for round(2048 x / q)
             // inputs are in [-q/2, ..., q/2]
             // 1290167 = round(2048 * 2^21 / q)
-            t[k] = ((int16_t)(((int32_t)u * 1290167 + (1 << 20)) >> 21)) & 0x7ff;
+            t[k] = Barrett_quotient_11(u);
 
             // this is equivalent to first mapping to positive
             // standard representatives followed by
@@ -288,10 +288,10 @@ void poly_compress1_neon(uint8_t r[32], const int16_t a[KYBER_N]){
 
     int16x8_t tvec[16];
     int16x8_t mask1 = vdupq_n_s16(0x1);
-    int32x4_t zero_int32x4 = {0, 0, 0, 0};
 #if __ARM_FEATURE_DOTPROD
     int8x16_t dot_v1 = {1, 2, 4, 8, 1, 2, 4, 8, 1, 2, 4, 8, 1, 2, 4, 8};
     int8x16_t dot_v4 = {1, 0, 16, 0, 1, 0, 16, 0, 1, 0, 16, 0, 1, 0, 16, 0};
+    int32x4_t zero_int32x4 = {0, 0, 0, 0};
 #endif
 
     for(size_t i = 0; i < KYBER_N / 128; i++){
@@ -350,12 +350,12 @@ void poly_compress1_neon(uint8_t r[32], const int16_t a[KYBER_N]){
 
 void poly_compress4_neon(uint8_t r[128], const int16_t a[KYBER_N]){
 
-    uint16_t t[4][8];
     int16x8_t tvec[4];
     int16x8_t mask4 = vdupq_n_s16(0xf);
-    int32x4_t zero_int32x4 = {0, 0, 0, 0};
+    int16x8_t one = vdupq_n_s16(1);
 #if __ARM_FEATURE_DOTPROD
     int8x16_t dot_v = {1, 0, 16, 0, 1, 0, 16, 0, 1, 0, 16, 0, 1, 0, 16, 0};
+    int32x4_t zero_int32x4 = {0, 0, 0, 0};
 #endif
 
     for(size_t i = 0; i < KYBER_N / 32; i++) {
@@ -370,10 +370,10 @@ void poly_compress4_neon(uint8_t r[128], const int16_t a[KYBER_N]){
         tvec[2] = vqdmulhq_n_s16(tvec[2], 315);
         tvec[3] = vqdmulhq_n_s16(tvec[3], 315);
 
-        tvec[0] = vrshrq_n_s16(tvec[0], 1);
-        tvec[1] = vrshrq_n_s16(tvec[1], 1);
-        tvec[2] = vrshrq_n_s16(tvec[2], 1);
-        tvec[3] = vrshrq_n_s16(tvec[3], 1);
+        tvec[0] = vhaddq_s16(tvec[0], one);
+        tvec[1] = vhaddq_s16(tvec[1], one);
+        tvec[2] = vhaddq_s16(tvec[2], one);
+        tvec[3] = vhaddq_s16(tvec[3], one);
 
         tvec[0] = vandq_s16(tvec[0], mask4);
         tvec[1] = vandq_s16(tvec[1], mask4);
@@ -404,24 +404,7 @@ void poly_compress4_neon(uint8_t r[128], const int16_t a[KYBER_N]){
 
 #endif
 
-        vst1q_s16(t[0], tvec[0]);
-
-        r[ 0] = t[0][0];
-        r[ 1] = t[0][0] >> 8;
-        r[ 2] = t[0][1];
-        r[ 3] = t[0][1] >> 8;
-        r[ 4] = t[0][2];
-        r[ 5] = t[0][2] >> 8;
-        r[ 6] = t[0][3];
-        r[ 7] = t[0][3] >> 8;
-        r[ 8] = t[0][4];
-        r[ 9] = t[0][4] >> 8;
-        r[10] = t[0][5];
-        r[11] = t[0][5] >> 8;
-        r[12] = t[0][6];
-        r[13] = t[0][6] >> 8;
-        r[14] = t[0][7];
-        r[15] = t[0][7] >> 8;
+        vst1q_s16((int16_t*)r, tvec[0]);
 
         r += 16;
     }
@@ -435,14 +418,13 @@ void poly_compress5_neon(uint8_t r[160], const int16_t a[KYBER_N]){
     int16x8_t mask_h_hi = {0, 0x3ff, 0, 0x3ff, 0, 0x3ff, 0, 0x3ff};
     int32x4_t mask_w_lo = {0xfffff, 0, 0xfffff, 0};
     int32x4_t mask_w_hi = {0, 0xfffff, 0, 0xfffff};
-    int32x4_t zero_int32x4 = {0, 0, 0, 0};
 #if __ARM_FEATURE_DOTPROD
     int8x16_t dot_v = {1, 0, 32, 0, 1, 0, 32, 0, 1, 0, 32, 0, 1, 0, 32, 0};
+    int32x4_t zero_int32x4 = {0, 0, 0, 0};
 #else
     int8x16_t mask_b_lo = {0x1f, 0, 0x1f, 0, 0x1f, 0, 0x1f, 0, 0x1f, 0, 0x1f, 0, 0x1f, 0, 0x1f, 0};
     int8x16_t mask_b_hi = {0, 0x1f, 0, 0x1f, 0, 0x1f, 0, 0x1f, 0, 0x1f, 0, 0x1f, 0, 0x1f, 0, 0x1f};
 #endif
-    int16x8_t tmp[2];
 
     uint16_t t[2][8];
     for(size_t i = 0; i < KYBER_N / 16; i++) {
@@ -474,7 +456,7 @@ void poly_compress5_neon(uint8_t r[160], const int16_t a[KYBER_N]){
 
 #endif
 
-        vst1q_s16(t[0], tvec[0]);
+        vst1q_s16((int16_t*)t[0], tvec[0]);
 
         r[0] = t[0][0];
         r[1] = t[0][0] >> 8;
@@ -514,7 +496,7 @@ void poly_compress10_neon(uint8_t r[320], const int16_t a[KYBER_N]){
         tvec = shift_with_holes_h(tvec, mask_h_lo, mask_h_hi, 6);
         tvec = (int16x8_t)shift_with_holes_s((int32x4_t)tvec, mask_w_lo, mask_w_hi, 12);
 
-        vst1q_s16(t, tvec);
+        vst1q_s16((int16_t*)t, tvec);
 
         r[0] = t[0];
         r[1] = t[0] >> 8;
@@ -535,7 +517,7 @@ void poly_compress10_neon(uint8_t r[320], const int16_t a[KYBER_N]){
 void poly_compress11_neon(uint8_t r[352], const int16_t a[KYBER_N]){
 
     uint64_t lo64, hi64;
-    uint16_t t[8];
+    __attribute__((aligned(16))) uint16_t t[8];
     int16x8_t avec, tvec;
     int16x8_t mask11 = vdupq_n_s16(0x7ff);
 
@@ -557,7 +539,7 @@ void poly_compress11_neon(uint8_t r[352], const int16_t a[KYBER_N]){
         tvec = shift_with_holes_h(tvec, mask_h_lo, mask_h_hi, 5);
         tvec = (int16x8_t)shift_with_holes_s((int32x4_t)tvec, mask_w_lo, mask_w_hi, 10);
 
-        vst1q_s16(t, tvec);
+        vst1q_s16((int16_t*)t, tvec);
 
         r[0] = t[0];
         r[1] = t[0] >> 8;
@@ -565,8 +547,8 @@ void poly_compress11_neon(uint8_t r[352], const int16_t a[KYBER_N]){
         r[3] = t[1] >> 8;
         r[4] = t[2];
 
-        lo64 = *(uint64_t*)(t + 0);
-        hi64 = *(uint64_t*)(t + 4);
+        memcpy(&lo64, t + 0, 8);
+        memcpy(&hi64, t + 4, 8);
         hi64 = (hi64 << 4) | (lo64 >> 40);
 
         r[5] = hi64;
