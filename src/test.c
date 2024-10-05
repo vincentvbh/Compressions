@@ -8,6 +8,14 @@
 
 #define KYBER_Q 3329
 
+int16_t Barrett_floor_reduce(int16_t a){
+    return a - (int16_t)(((int32_t)a * 20159) >> 26) * KYBER_Q;
+}
+
+int16_t Barrett_round_reduce(int16_t a){
+    return a - (int16_t)(((int32_t)a * 20159 + (1 << 25)) >> 26) * KYBER_Q;
+}
+
 int16_t compress_D(int16_t a, const size_t D){
     if(a < 0){
         a += KYBER_Q;
@@ -86,6 +94,32 @@ int16_t Barrett_quotient_11(int16_t a){
 }
 
 int main(void){
+
+    int16_t ubound, t;
+
+    ubound = 0;
+    for(int16_t i = -32767; i < 32767; i++){
+        t = Barrett_floor_reduce(i);
+        if(t > ubound){
+            ubound = t;
+        }
+        if((t < 0) && (t < -ubound)){
+            ubound = -t;
+        }
+    }
+    printf("ubound of floor reduction: %4d\n", ubound);
+
+    ubound = 0;
+    for(int16_t i = -32767; i < 32767; i++){
+        t = Barrett_round_reduce(i);
+        if(t > ubound){
+            ubound = t;
+        }
+        if((t < 0) && (t < -ubound)){
+            ubound = -t;
+        }
+    }
+    printf("ubound of round reduction: %4d\n", ubound);
 
     for(int16_t i = -1664; i <= 1664; i++){
         assert(compress_D(i, 1) == Barrett_quotient_1(i));

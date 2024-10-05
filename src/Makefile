@@ -9,10 +9,10 @@ AVX2_FLAGS = -mavx2 -z noexecstack
 
 JASMINC = jasminc
 
+all: test avx2_ref neon_ref armv7e-m_ref
+
 jazz_x86.s: jazz_x86.jazz
 	$(JASMINC) $< -o $@
-
-all: test avx2_ref neon_ref armv7e-m_ref
 
 test: test.c
 	$(CC) $(CLFAGS) $< -o $@
