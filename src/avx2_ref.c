@@ -51,7 +51,6 @@ int16_t Barrett_quotient_4(int16_t a){
     // return ((int16_t)(((int32_t)a * 630 + (1 << 16)) >> 17)) & 0xf;
     return pmulhrsw(pmulhw(a, 630), (1 << 14)) & 0xf;
     // return psraw(pmulhw(a, 630) + (1 << 0), 1) & 0xf;
-
 }
 
 int16_t Barrett_quotient_5(int16_t a){
@@ -71,7 +70,6 @@ int16_t Barrett_quotient_10(int16_t a){
     // beware that adding prior to shifting overflows (32-bit), we must shift, add, and then shift here.
     // return ((int16_t)( ((((int32_t)a * 1290167) >> 2) + (1 << 19)) >> 20)) & 0x3ff;
     return pmulhrsw(pmulhw(a, -20553) + pmullw(a, 20), (1 << 9)) & 0x3ff;
-
 }
 
 int16_t Barrett_quotient_11(int16_t a){

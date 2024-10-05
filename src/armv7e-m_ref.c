@@ -4,8 +4,6 @@
 #include <stdlib.h>
 #include <assert.h>
 
-// we can use ubfx here
-
 // 1, 4, 5, 10, 11
 
 #define KYBER_Q 3329
