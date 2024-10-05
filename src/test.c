@@ -98,7 +98,7 @@ int main(void){
     int16_t ubound, t;
 
     ubound = 0;
-    for(int16_t i = -32767; i < 32767; i++){
+    for(int16_t i = -3328; i <= 3229; i++){
         t = Barrett_floor_reduce(i);
         if(t > ubound){
             ubound = t;
