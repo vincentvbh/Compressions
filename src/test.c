@@ -68,7 +68,7 @@ int16_t Barrett_quotient_7(int16_t a){
 int16_t Barrett_quotient_8(int16_t a){
     // 12-bit suffices for D = 8
     // 315 = round(256 * 2^12 / q)
-    return ((int16_t)(((int32_t)a * 315 + (1 << 11)) >> 12)) & 0xff;
+    return ((int16_t)(((int32_t)a * 161271 + (1 << 20)) >> 21)) & 0xff;
 }
 
 int16_t Barrett_quotient_9(int16_t a){
@@ -76,7 +76,7 @@ int16_t Barrett_quotient_9(int16_t a){
     // return ((int16_t)(((int32_t)a * 315 + (1 << 10)) >> 11)) & 0x1ff;
     // 20-bit suffices for D = 9
     // 161271 = round(512 * 2^20 / q)
-    return ((int16_t)(((int32_t)a * 161271 + (1 << 19)) >> 20)) & 0x1ff;
+    return ((int16_t)(((int32_t)a * 1290167 + (1 << 22)) >> 23)) & 0x1ff;
 }
 
 int16_t Barrett_quotient_10(int16_t a){
@@ -121,39 +121,39 @@ int main(void){
     }
     printf("ubound of round reduction: %4d\n", ubound);
 
-    for(int16_t i = -1664; i <= 1664; i++){
+    for(int16_t i = -1664; i <= 3329; i++){
         assert(compress_D(i, 1) == Barrett_quotient_1(i));
     }
 
-    for(int16_t i = -1664; i <= 1664; i++){
+    for(int16_t i = -1664; i <= 3329; i++){
         assert(compress_D(i, 2) == Barrett_quotient_2(i));
     }
 
-    for(int16_t i = -1664; i <= 1664; i++){
+    for(int16_t i = -1664; i <= 3329; i++){
         assert(compress_D(i, 3) == Barrett_quotient_3(i));
     }
 
-    for(int16_t i = -1664; i <= 1664; i++){
+    for(int16_t i = -1664; i <= 3329; i++){
         assert(compress_D(i, 4) == Barrett_quotient_4(i));
     }
 
-    for(int16_t i = -1664; i <= 1664; i++){
+    for(int16_t i = -1664; i <= 3329; i++){
         assert(compress_D(i, 5) == Barrett_quotient_5(i));
     }
 
-    for(int16_t i = -1664; i <= 1664; i++){
+    for(int16_t i = -1664; i <= 3329; i++){
         assert(compress_D(i, 6) == Barrett_quotient_6(i));
     }
 
-    for(int16_t i = -1664; i <= 1664; i++){
+    for(int16_t i = -1664; i <= 3329; i++){
         assert(compress_D(i, 7) == Barrett_quotient_7(i));
     }
 
-    for(int16_t i = -1664; i <= 1664; i++){
+    for(int16_t i = -1664; i <= 3329; i++){
         assert(compress_D(i, 8) == Barrett_quotient_8(i));
     }
 
-    for(int16_t i = -1664; i <= 1664; i++){
+    for(int16_t i = -1664; i <= 3329; i++){
         assert(compress_D(i, 9) == Barrett_quotient_9(i));
     }
 
