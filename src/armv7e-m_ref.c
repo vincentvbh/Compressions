@@ -34,6 +34,23 @@ int32_t smlawx(const int32_t c, const int16_t a, const int32_t b){
     return (((int64_t)a * b) >> 16) + c;
 }
 
+int32_t ubfx(const int32_t a, size_t pos, size_t width){
+    if(width < 1){
+        return a;
+    }
+    if(pos >= 32){
+        return 0;
+    }
+    if(pos + width > 32){
+        width = 32 - pos;
+    }
+    if(width == 32){
+        assert(pos == 0);
+        return a;
+    }
+    return (a >> pos) & ((1 << width) - 1);
+}
+
 int16_t compress_D(int16_t a, const size_t D){
     if(a < 0){
         a += KYBER_Q;
@@ -84,7 +101,8 @@ int16_t Barrett_quotient_11(int16_t a){
     // 21-bit suffices for D = 11
     // 1290167 = round(2048 * 2^21 / q)
     // return ((int16_t)(((int32_t)a * 1290167 + (1 << 20)) >> 21)) & 0x7ff;
-    return (smlawx(1 << 4, a, 1290167) >> 5) & 0x7ff;
+    return ubfx(smlawx(1 << 4, a, 1290167), 5, 11);
+    // return (smlawx(1 << 4, a, 1290167) >> 5) & 0x7ff;
 }
 
 int main(void){

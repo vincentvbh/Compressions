@@ -1,7 +1,7 @@
 
 CC = gcc
 
-CFLAGS += -Wall -O3 -mtune=native -march=native
+CFLAGS += -Wall -O2 -mtune=native
 
 # AARCH64_FLAGS = -march=armv8-a+dotprod
 AARCH64_FLAGS = -march=armv8-a
