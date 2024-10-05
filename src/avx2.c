@@ -85,6 +85,8 @@ int16_t Barrett_quotient_11(int16_t a){
     // return psraw(pmulhw(a, -20553) + pmullw(a, 20) + (1 << 4), 5) & 0x7ff;
 }
 
+
+// optimize this one
 void poly_compress1(uint8_t r[32], const int16_t a[KYBER_N]){
 
     unsigned int i,j;

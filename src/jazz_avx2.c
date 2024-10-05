@@ -14,9 +14,9 @@
 #define KYBER_N 256
 
 extern
-void poly_compress4_x86_jazz(uint8_t r[128], const int16_t a[KYBER_N]);
+void poly_compress4_avx2_jazz(uint8_t r[128], const int16_t a[KYBER_N]);
 extern
-void poly_compress10_x86_jazz(uint8_t r[320], const int16_t a[KYBER_N]);
+void poly_compress10_avx2_jazz(uint8_t r[320], const int16_t a[KYBER_N]);
 
 int16_t pmullw(const int16_t a, const int16_t b){
     return a * b;
@@ -251,7 +251,7 @@ int main(void){
     // assert(memcmp(ref, res, 32) == 0);
 
     poly_compress4(ref, a);
-    poly_compress4_x86_jazz(res, a);
+    poly_compress4_avx2_jazz(res, a);
 
     assert(memcmp(ref, res, 128) == 0);
 
@@ -261,7 +261,7 @@ int main(void){
     // assert(memcmp(ref, res, 160) == 0);
 
     poly_compress10(ref, a);
-    poly_compress10_x86_jazz(res, a);
+    poly_compress10_avx2_jazz(res, a);
 
     assert(memcmp(ref, res, 320) == 0);
 

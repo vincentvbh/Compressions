@@ -9,6 +9,8 @@ AVX2_FLAGS = -mavx2 -z noexecstack
 
 JASMINC = jasminc
 
+JAZZ_OBJ = jazz_x86.s jazz_avx2.s
+
 all: test avx2_ref neon_ref armv7e-m_ref
 
 jazz_x86.s: jazz_x86.jazz
@@ -49,6 +51,7 @@ clean:
 	rm -f avx2
 	rm -f jazz_x86
 	rm -f jazz_avx2
+	rm -f $(JAZZ_OBJ)
 	rm -f neon_ref
 	rm -f neon
 	rm -f armv7e-m_ref
