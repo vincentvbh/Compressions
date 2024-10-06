@@ -97,7 +97,8 @@ void poly_compress1(uint8_t r[32], const int16_t a[KYBER_N]){
             // 19-bit precision suffices for round(2 x / q)
             // inputs are in [-q/2, ..., q/2]
             // 315 = round(2 * 2^19 / q)
-            u = Barrett_quotient_1(u);
+            // u = Barrett_quotient_1(u);
+            u = ((int16_t)(((int32_t)u * 315 + (1 << 18)) >> 19)) & 0x1;
 
             // this is equivalent to first mapping to positive
             // standard representatives followed by
@@ -241,26 +242,38 @@ void poly_compress11(uint8_t r[352], const int16_t a[KYBER_N]){
 
 void poly_compress1_avx2(uint8_t r[32], const int16_t a[KYBER_N]){
 
-    unsigned int i,j;
-    int16_t u;
+    __m256i a0, a1;
+    const __m256i b0 = _mm256_set1_epi16(315);
+    const __m256i addend = _mm256_set1_epi16(1 << 2);
+    const __m256i andmask = _mm256_set1_epi16(1 << 7);
 
-    for(i=0;i<KYBER_N/8;i++) {
-        r[i] = 0;
-        for(j=0;j<8;j++) {
-            u = a[8*i+j];
+    uint32_t sign;
 
-            // 19-bit precision suffices for round(2 x / q)
-            // inputs are in [-q/2, ..., q/2]
-            // 315 = round(2 * 2^19 / q)
-            u = (int16_t)(((int32_t)u * 315 + (1 << 18)) >> 19) & 1;
+    for(size_t i = 0; i < KYBER_N / 32; i++){
 
-            // this is equivalent to first mapping to positive
-            // standard representatives followed by
-            // u = ((((uint16_t)u << 1) + KYBER_Q/2)/KYBER_Q) & 1;
+        a0 = _mm256_loadu_si256((__m256i*)(a + i * 32 + 0 * 16));
+        a1 = _mm256_loadu_si256((__m256i*)(a + i * 32 + 1 * 16));
 
-            r[i] |= u << j;
+        a0 = _mm256_mulhi_epi16(a0, b0);
+        a1 = _mm256_mulhi_epi16(a1, b0);
 
-        }
+        a0 = _mm256_add_epi16(a0, addend);
+        a1 = _mm256_add_epi16(a1, addend);
+
+        a0 = _mm256_slli_epi16(a0, 4);
+        a1 = _mm256_slli_epi16(a1, 4);
+
+        a0 = _mm256_and_si256(a0, andmask);
+        a1 = _mm256_and_si256(a1, andmask);
+
+        a0 = _mm256_packus_epi16(a0, a1);
+
+        a0 = (__m256i)_mm256_permute4x64_pd((__m256d)a0, 0xd8);
+
+        sign = _mm256_movemask_epi8(a0);
+
+        memcpy(r + i * 4, &sign, 4);
+
     }
 
 }
@@ -478,10 +491,10 @@ int main(void){
         a[i] -= KYBER_Q / 2;
     }
 
-    // poly_compress1(ref, a);
-    // poly_compress1_avx2(res, a);
+    poly_compress1(ref, a);
+    poly_compress1_avx2(res, a);
 
-    // assert(memcmp(ref, res, 32) == 0);
+    assert(memcmp(ref, res, 32) == 0);
 
     poly_compress4(ref, a);
     poly_compress4_avx2(res, a);
