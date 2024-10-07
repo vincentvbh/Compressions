@@ -16,6 +16,20 @@ int16_t Barrett_round_reduce(int16_t a){
     return a - (int16_t)(((int32_t)a * 20159 + (1 << 25)) >> 26) * KYBER_Q;
 }
 
+int16_t compress_D_Barrett_reduction(int16_t a, const size_t D){
+    int32_t t;
+    if(D == 0){
+        return Barrett_round_reduce(a);
+    }
+    t = (int32_t)a * (1 << D) * 20159;
+    t += (1 << 25);
+    t >>= 26;
+    t &= ((1 << D) - 1);
+    assert((a != KYBER_Q) || (t == 0));
+
+    return t;
+}
+
 int16_t compress_D(int16_t a, const size_t D){
     if(a < 0){
         a += KYBER_Q;
@@ -100,8 +114,9 @@ int main(void){
     int16_t ubound, t;
 
     ubound = 0;
-    for(int16_t i = -3328; i <= 3229; i++){
+    for(int32_t i = -32767; i < 32768; i++){
         t = Barrett_floor_reduce(i);
+        assert(t >= 0);
         if(t > ubound){
             ubound = t;
         }
@@ -112,7 +127,7 @@ int main(void){
     printf("ubound of floor reduction: %4d\n", ubound);
 
     ubound = 0;
-    for(int16_t i = -32767; i < 32767; i++){
+    for(int32_t i = -32767; i < 32768; i++){
         t = Barrett_round_reduce(i);
         if(t > ubound){
             ubound = t;
@@ -122,6 +137,14 @@ int main(void){
         }
     }
     printf("ubound of round reduction: %4d\n", ubound);
+
+    for(int16_t i = 0; i <= 3329; i++){
+        assert(compress_D(i, 1) == compress_D_Barrett_reduction(i, 1));
+    }
+
+    for(int16_t i = 0; i <= 3329; i++){
+        assert(compress_D(i, 4) == compress_D_Barrett_reduction(i, 4));
+    }
 
     for(int16_t i = -1664; i <= 3329; i++){
         assert(compress_D(i, 1) == Barrett_quotient_1(i));
