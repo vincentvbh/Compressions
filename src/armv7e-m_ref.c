@@ -86,6 +86,9 @@ int16_t Barrett_quotient_5(int16_t a){
 
 int16_t Barrett_quotient_10(int16_t a){
     // 22-bit suffices for D = 10
+    // 1290167 = round(1024 * 2^22 / q)
+    // beware that adding prior to shifting overflows (32-bit), we must shift, add, and then shift here.
+    // return ( ((((int32_t)a * 1290167) >> 1) + (1 << 20)) >> 21) & 0x3ff;
     // 1321131424 = round(1024 * 2^32 / q)
     return (smlawx(1 << 15, a, 1321131424) >> 16) & 0x3ff;
     // return smmulr((int32_t)a, 1321131424) & 0x3ff;
@@ -95,7 +98,7 @@ int16_t Barrett_quotient_11(int16_t a){
     // 21-bit suffices for D = 11
     // 1290167 = round(2048 * 2^21 / q)
     // beware that adding prior to shifting overflows (32-bit), we must shift, add, and then shift here.
-    // return (((int32_t)a * 1290167 + (1 << 20)) >> 21) & 0x7ff;
+    // return ( ((((int32_t)a * 1290167) >> 1) + (1 << 19)) >> 20) & 0x7ff;
     return ubfx(smlawx(1 << 4, a, 1290167), 5, 11);
     // return (smlawx(1 << 4, a, 1290167) >> 5) & 0x7ff;
 }

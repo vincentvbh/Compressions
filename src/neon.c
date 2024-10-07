@@ -89,7 +89,7 @@ int16_t Barrett_quotient_10(int16_t a){
     // 22-bit suffices for D = 10
     // 1290167 = round(1024 * 2^22 / q)
     // beware that adding prior to shifting overflows (32-bit), we must shift, add, and then shift here.
-    // return ( ((((int32_t)a * 1290167) >> 2) + (1 << 19)) >> 20) & 0x3ff;
+    // return ( ((((int32_t)a * 1290167) >> 1) + (1 << 20)) >> 21) & 0x3ff;
     return srshr((mla(shadd(sqdmulh(a, -20553), 0), a, 20)), 6) & 0x3ff;
 }
 
@@ -97,7 +97,7 @@ int16_t Barrett_quotient_11(int16_t a){
     // 21-bit suffices for D = 11
     // 1290167 = round(2048 * 2^21 / q)
     // beware that adding prior to shifting overflows (32-bit), we must shift, add, and then shift here.
-    // return ( ((((int32_t)a * 1290167) >> 2) + (1 << 18)) >> 19) & 0x7ff;
+    // return ( ((((int32_t)a * 1290167) >> 1) + (1 << 19)) >> 20) & 0x7ff;
     return srshr((mla(shadd(sqdmulh(a, -20553), 0), a, 20)), 5) & 0x7ff;
 }
 
@@ -482,6 +482,7 @@ void poly_compress10_neon(uint8_t r[320], const int16_t a[KYBER_N]){
     uint16_t t[8];
     int16x8_t avec, tvec;
     int16x8_t mask10 = vdupq_n_s16(0x3ff);
+    int16x8_t zero = vdupq_n_s16(0);
 
     int16x8_t mask_h_lo = {0x3ff, 0, 0x3ff, 0, 0x3ff, 0, 0x3ff, 0};
     int16x8_t mask_h_hi = {0, 0x3ff, 0, 0x3ff, 0, 0x3ff, 0, 0x3ff};
@@ -492,7 +493,7 @@ void poly_compress10_neon(uint8_t r[320], const int16_t a[KYBER_N]){
         avec = vld1q_s16(a + 8 * i);
 
         tvec = vqdmulhq_n_s16(avec, -20553);
-        tvec = vhaddq_s16(tvec, (int16x8_t){0, 0, 0, 0, 0, 0, 0, 0});
+        tvec = vhaddq_s16(tvec, zero);
         tvec = vmlaq_n_s16(tvec, avec, 20);
         tvec = vrshrq_n_s16(tvec, 6);
         tvec = vandq_s16(tvec, mask10);
@@ -524,6 +525,7 @@ void poly_compress11_neon(uint8_t r[352], const int16_t a[KYBER_N]){
     __attribute__((aligned(16))) uint16_t t[8];
     int16x8_t avec, tvec;
     int16x8_t mask11 = vdupq_n_s16(0x7ff);
+    int16x8_t zero = vdupq_n_s16(0);
 
     int16x8_t mask_h_lo = {0x7ff, 0, 0x7ff, 0, 0x7ff, 0, 0x7ff, 0};
     int16x8_t mask_h_hi = {0, 0x7ff, 0, 0x7ff, 0, 0x7ff, 0, 0x7ff};
@@ -535,7 +537,7 @@ void poly_compress11_neon(uint8_t r[352], const int16_t a[KYBER_N]){
         avec = vld1q_s16(a + 8 * i);
 
         tvec = vqdmulhq_n_s16(avec, -20553);
-        tvec = vhaddq_s16(tvec, (int16x8_t){0, 0, 0, 0, 0, 0, 0, 0});
+        tvec = vhaddq_s16(tvec, zero);
         tvec = vmlaq_n_s16(tvec, avec, 20);
         tvec = vrshrq_n_s16(tvec, 5);
         tvec = vandq_s16(tvec, mask11);

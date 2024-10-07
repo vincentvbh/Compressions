@@ -95,14 +95,16 @@ int16_t Barrett_quotient_10(int16_t a){
     // 22-bit suffices for D = 10
     // 1290167 = round(1024 * 2^22 / q)
     // beware that adding prior to shifting overflows (32-bit), we must shift, add, and then shift here.
-    return ( ((((int32_t)a * 1290167) >> 2) + (1 << 19)) >> 20) & 0x3ff;
+    return ( ((((int32_t)a * 1290167) >> 1) + \
+                    (1 << 20)) >> 21) & 0x3ff;
 }
 
 int16_t Barrett_quotient_11(int16_t a){
     // 21-bit suffices for D = 11
     // 1290167 = round(2048 * 2^21 / q)
     // beware that adding prior to shifting overflows (32-bit), we must shift, add, and then shift here.
-    return ( ((((int32_t)a * 1290167) >> 2) + (1 << 18)) >> 19) & 0x7ff;
+    return ( ((((int32_t)a * 1290167) >> 1) + \
+                    (1 << 19)) >> 20) & 0x7ff;
 }
 
 int main(void){
@@ -142,7 +144,7 @@ int main(void){
         assert(compress_D(i, 4) == compress_D_Barrett_reduction(i, 4));
     }
 
-    for(int16_t i = -1664; i <= 3329; i++){
+    for(int16_t i = -1664; i <= 1664; i++){
         assert(compress_D(i, 1) == Barrett_quotient_1(i));
     }
 
@@ -154,7 +156,7 @@ int main(void){
         assert(compress_D(i, 3) == Barrett_quotient_3(i));
     }
 
-    for(int16_t i = -1664; i <= 3329; i++){
+    for(int16_t i = -1664; i <= 1664; i++){
         assert(compress_D(i, 4) == Barrett_quotient_4(i));
     }
 

@@ -86,7 +86,7 @@ int16_t Barrett_quotient_10(int16_t a){
     // 22-bit suffices for D = 10
     // 1290167 = round(1024 * 2^22 / q)
     // beware that adding prior to shifting overflows (32-bit), we must shift, add, and then shift here.
-    // return ( ((((int32_t)a * 1290167) >> 2) + (1 << 19)) >> 20) & 0x3ff;
+    // return ( ((((int32_t)a * 1290167) >> 1) + (1 << 20)) >> 21) & 0x3ff;
     return srshr((mla(shadd(sqdmulh(a, -20553), 0), a, 20)), 6) & 0x3ff;
 }
 
@@ -94,7 +94,7 @@ int16_t Barrett_quotient_11(int16_t a){
     // 21-bit suffices for D = 11
     // 1290167 = round(2048 * 2^21 / q)
     // beware that adding prior to shifting overflows (32-bit), we must shift, add, and then shift here.
-    // return ( ((((int32_t)a * 1290167) >> 2) + (1 << 18)) >> 19) & 0x7ff;
+    // return ( ((((int32_t)a * 1290167) >> 1) + (1 << 19)) >> 20) & 0x7ff;
     return srshr((mla(shadd(sqdmulh(a, -20553), 0), a, 20)), 5) & 0x7ff;
 }
 
