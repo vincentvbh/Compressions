@@ -59,7 +59,7 @@ int16_t compress_D(int16_t a, const size_t D){
 int16_t Barrett_quotient_1(int16_t a){
     // 19-bit suffices for D = 1
     // 315 = round(2 * 2^19 / q)
-    // return ((int16_t)(((int32_t)a * 315 + (1 << 18)) >> 19)) & 0x1;
+    // return (((int32_t)a * 315 + (1 << 18)) >> 19) & 0x1;
     // 2580335 = round(2 * 2^32 / q)
     return (smlawx(1 << 15, a, 2580335) >> 16) & 0x1;
     // return smmulr((int32_t)a, 2580335) & 0x1;
@@ -68,7 +68,7 @@ int16_t Barrett_quotient_1(int16_t a){
 int16_t Barrett_quotient_4(int16_t a){
     // 16-bit suffices for D = 4
     // 315 = round(16 * 2^16 / q)
-    // return ((int16_t)(((int32_t)a * 315 + (1 << 15)) >> 16)) & 0xf;
+    // return (((int32_t)a * 315 + (1 << 15)) >> 16) & 0xf;
     // 20642679 = round(16 * 2^32)
     return (smlawx(1 << 15, a, 20642679) >> 16) & 0xf;
     // return smmulr((int32_t)a, 20642679) & 0xf;
@@ -78,15 +78,13 @@ int16_t Barrett_quotient_4(int16_t a){
 int16_t Barrett_quotient_5(int16_t a){
     // 15-bit suffices for D = 5
     // 315 = round(32 * 2^15 / q)
-    // return ((int16_t)(((int32_t)a * 315 + (1 << 14)) >> 15)) & 0x1f;
+    // return (((int32_t)a * 315 + (1 << 14)) >> 15) & 0x1f;
     // 41285357 = round(32 * 2^32 / q)
     return (smlawx(1 << 15, a, 41285357) >> 16) & 0x1f;
     // return smmulr((int32_t)a, 41285357) & 0x1f;
 }
 
 int16_t Barrett_quotient_10(int16_t a){
-    // this doesn't work
-    // return ((int16_t)(((int32_t)a * 161271 + (1 << 18)) >> 19)) & 0x3ff;
     // 22-bit suffices for D = 10
     // 1321131424 = round(1024 * 2^32 / q)
     return (smlawx(1 << 15, a, 1321131424) >> 16) & 0x3ff;
@@ -97,7 +95,7 @@ int16_t Barrett_quotient_11(int16_t a){
     // 21-bit suffices for D = 11
     // 1290167 = round(2048 * 2^21 / q)
     // beware that adding prior to shifting overflows (32-bit), we must shift, add, and then shift here.
-    // return ((int16_t)(((int32_t)a * 1290167 + (1 << 20)) >> 21)) & 0x7ff;
+    // return (((int32_t)a * 1290167 + (1 << 20)) >> 21) & 0x7ff;
     return ubfx(smlawx(1 << 4, a, 1290167), 5, 11);
     // return (smlawx(1 << 4, a, 1290167) >> 5) & 0x7ff;
 }

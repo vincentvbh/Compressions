@@ -40,73 +40,69 @@ int16_t compress_D(int16_t a, const size_t D){
 int16_t Barrett_quotient_1(int16_t a){
     // 19-bit suffices for D = 1
     // 315 = round(2 * 2^19 / q)
-    return ((int16_t)(((int32_t)a * 315 + (1 << 18)) >> 19)) & 0x1;
+    return (((int32_t)a * 315 + (1 << 18)) >> 19) & 0x1;
 }
 
 int16_t Barrett_quotient_2(int16_t a){
     // 18-bit suffices for D = 2
     // 315 = round(4 * 2^18 / q)
-    return ((int16_t)(((int32_t)a * 315 + (1 << 17)) >> 18)) & 0x3;
+    return (((int32_t)a * 315 + (1 << 17)) >> 18) & 0x3;
 }
 
 int16_t Barrett_quotient_3(int16_t a){
     // 17-bit suffices for D = 3
     // 315 = round(8 * 2^17 / q)
-    return ((int16_t)(((int32_t)a * 315 + (1 << 16)) >> 17)) & 0x7;
+    return (((int32_t)a * 315 + (1 << 16)) >> 17) & 0x7;
 }
 
 int16_t Barrett_quotient_4(int16_t a){
     // 16-bit suffices for D = 4
     // 315 = round(16 * 2^16 / q)
-    return ((int16_t)(((int32_t)a * 315 + (1 << 15)) >> 16)) & 0xf;
+    return (((int32_t)a * 315 + (1 << 15)) >> 16) & 0xf;
 }
 
 int16_t Barrett_quotient_5(int16_t a){
     // 15-bit suffices for D = 5
     // 315 = round(32 * 2^15 / q)
-    return ((int16_t)(((int32_t)a * 315 + (1 << 14)) >> 15)) & 0x1f;
+    return (((int32_t)a * 315 + (1 << 14)) >> 15) & 0x1f;
 }
 
 int16_t Barrett_quotient_6(int16_t a){
     // 14-bit suffices for D = 6
     // 315 = round(64 * 2^14 / q)
-    return ((int16_t)(((int32_t)a * 315 + (1 << 13)) >> 14)) & 0x3f;
+    return (((int32_t)a * 315 + (1 << 13)) >> 14) & 0x3f;
 }
 
 int16_t Barrett_quotient_7(int16_t a){
     // 13-bit suffices for D = 7
     // 315 = round(128 * 2^13 / q)
-    return ((int16_t)(((int32_t)a * 315 + (1 << 12)) >> 13)) & 0x7f;
+    return (((int32_t)a * 315 + (1 << 12)) >> 13) & 0x7f;
 }
 
 int16_t Barrett_quotient_8(int16_t a){
     // 12-bit suffices for D = 8
     // 315 = round(256 * 2^12 / q)
-    return ((int16_t)(((int32_t)a * 161271 + (1 << 20)) >> 21)) & 0xff;
+    return (((int32_t)a * 161271 + (1 << 20)) >> 21) & 0xff;
 }
 
 int16_t Barrett_quotient_9(int16_t a){
-    // this doesn't work
-    // return ((int16_t)(((int32_t)a * 315 + (1 << 10)) >> 11)) & 0x1ff;
     // 20-bit suffices for D = 9
     // 161271 = round(512 * 2^20 / q)
-    return ((int16_t)(((int32_t)a * 161271 + (1 << 19)) >> 20)) & 0x1ff;
+    return (((int32_t)a * 161271 + (1 << 19)) >> 20) & 0x1ff;
 }
 
 int16_t Barrett_quotient_10(int16_t a){
-    // this doesn't work
-    // return ((int16_t)(((int32_t)a * 161271 + (1 << 18)) >> 19)) & 0x3ff;
     // 22-bit suffices for D = 10
     // 1290167 = round(1024 * 2^22 / q)
     // beware that adding prior to shifting overflows (32-bit), we must shift, add, and then shift here.
-    return ((int16_t)( ((((int32_t)a * 1290167) >> 2) + (1 << 19)) >> 20)) & 0x3ff;
+    return ( ((((int32_t)a * 1290167) >> 2) + (1 << 19)) >> 20) & 0x3ff;
 }
 
 int16_t Barrett_quotient_11(int16_t a){
     // 21-bit suffices for D = 11
     // 1290167 = round(2048 * 2^21 / q)
     // beware that adding prior to shifting overflows (32-bit), we must shift, add, and then shift here.
-    return ((int16_t)( ((((int32_t)a * 1290167) >> 2) + (1 << 18)) >> 19)) & 0x7ff;
+    return ( ((((int32_t)a * 1290167) >> 2) + (1 << 18)) >> 19) & 0x7ff;
 }
 
 int main(void){
