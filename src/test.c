@@ -114,7 +114,7 @@ int main(void){
     int16_t ubound, t;
 
     ubound = 0;
-    for(int32_t i = -32767; i < 32768; i++){
+    for(int32_t i = -32768; i < 32768; i++){
         t = Barrett_floor_reduce(i);
         assert(t >= 0);
         if(t > ubound){
@@ -127,7 +127,7 @@ int main(void){
     printf("ubound of floor reduction: %4d\n", ubound);
 
     ubound = 0;
-    for(int32_t i = -32767; i < 32768; i++){
+    for(int32_t i = -32768; i < 32768; i++){
         t = Barrett_round_reduce(i);
         if(t > ubound){
             ubound = t;
