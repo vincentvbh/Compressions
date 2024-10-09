@@ -12,11 +12,27 @@
 #define KYBER_Q 3329
 
 #define KYBER_N 256
+#define KYBER_K 3
 
 extern
 void poly_compress4_avx2_jazz(uint8_t r[128], const int16_t a[KYBER_N]);
 extern
 void poly_compress10_avx2_jazz(uint8_t r[320], const int16_t a[KYBER_N]);
+
+extern
+void poly_round_reduce_avx2(int16_t a[KYBER_N]);
+
+void poly_round_reduce(int16_t a[KYBER_N]){
+    for(size_t i = 0; i < KYBER_N; i++){
+        a[i] = a[i] % KYBER_Q;
+        if(a[i] > (KYBER_Q / 2)){
+            a[i] -= KYBER_Q;
+        }
+        if(a[i] < -(KYBER_Q / 2)){
+            a[i] += KYBER_Q;
+        }
+    }
+}
 
 int16_t pmullw(const int16_t a, const int16_t b){
     return a * b;
@@ -245,38 +261,39 @@ void poly_compress11(uint8_t r[352], const int16_t a[KYBER_N]){
 
 int main(void){
 
-    __attribute__ ((aligned(32))) int16_t a[KYBER_N];
-    uint8_t ref[352], res[352];
+    __attribute__ ((aligned(32))) int16_t a[KYBER_K * KYBER_N];
+    int16_t poly_a[KYBER_N], poly_b[KYBER_N], poly_c[KYBER_N];
+    uint8_t ref[352], res[KYBER_K * 352];
 
     for(size_t i = 0; i < KYBER_N; i++){
         a[i] = rand() % KYBER_Q;
         a[i] -= KYBER_Q / 2;
     }
 
-    // poly_compress1(ref, a);
-    // poly_compress1_jazz(res, a);
-
-    // assert(memcmp(ref, res, 32) == 0);
-
     poly_compress4(ref, a);
     poly_compress4_avx2_jazz(res, a);
 
     assert(memcmp(ref, res, 128) == 0);
 
-    // poly_compress5(ref, a);
-    // poly_compress5_jazz(res, a);
-
-    // assert(memcmp(ref, res, 160) == 0);
+    printf("poly_compress4 is correct!\n");
 
     poly_compress10(ref, a);
     poly_compress10_avx2_jazz(res, a);
 
     assert(memcmp(ref, res, 320) == 0);
 
-    // poly_compress11(ref, a);
-    // poly_compress11_jazz(res, a);
+    printf("poly_compress10 is correct!\n");
 
-    // assert(memcmp(ref, res, 352) == 0);
+    for(size_t i = 0; i < KYBER_N; i++){
+        poly_a[i] = poly_b[i] = rand();
+    }
+
+    poly_round_reduce(poly_a);
+    poly_round_reduce_avx2(poly_b);
+
+    assert(memcmp(poly_a, poly_b, sizeof(int16_t) * KYBER_N) == 0);
+
+    printf("poly_round_reduce_avx2 is correct!\n");
 
     printf("Test finished!\n");
 

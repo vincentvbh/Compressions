@@ -2,6 +2,10 @@
 param int KYBER_Q = 3329;
 param int KYBER_N = 256;
 
+param int KYBER_K = 3;
+
+param int KYBER_VECN = KYBER_K * KYBER_N;
+
 u16 compress4_b0 = 630;
 u16 compress4_b1 = 1 << 14;
 u16 compress4_mask4 = 0xf;
@@ -77,15 +81,15 @@ u8[32] compress10_shuffle = { 0,  1,  2,  3,  4,  8,  9, 10,
                               9, 10, 11, 12, -1, -1, -1, -1,
                              -1, -1,  0,  1,  2,  3,  4,  8};
 
-export
-fn poly_compress10_avx2_jazz(reg u64 r, reg u64 a){
+inline
+fn poly_compress10_avx2_inline(reg u64 r, stack u16[KYBER_VECN] a){
 
     reg u256 a0;
     reg u256 p0 p1;
     reg u128 lo hi;
     reg u256 b0 b1 b2;
     reg u256 mask10 shift sllv_indx shuffle;
-    reg u64 i;
+    inline int i;
 
     b0 = #VPBROADCAST_16u16(compress10_b0);
     b1 = #VPBROADCAST_16u16(compress10_b1);
@@ -95,12 +99,9 @@ fn poly_compress10_avx2_jazz(reg u64 r, reg u64 a){
     sllv_indx = #VPBROADCAST_4u64(compress10_sllv_indx);
     shuffle = compress10_shuffle[u256 0];
 
-    i = 0;
+    for i = 0 to KYBER_VECN / 16 {
 
-    while(i < KYBER_N / 16){
-
-        a0 = (u256)[a];
-        a += 32;
+        a0 = a[u256 i];
 
         p0 = #VPMULH_16u16(a0, b0);
         p1 = #VPMULL_16u16(a0, b1);
@@ -125,9 +126,75 @@ fn poly_compress10_avx2_jazz(reg u64 r, reg u64 a){
         (u32)[r + 16] = #VPEXTR_32(hi, 0);
         r += 20;
 
-        i += 1;
     }
 
 }
 
+export
+fn poly_compress10_avx2_jazz(reg u64 r, reg u64 a){
 
+    stack u16[KYBER_VECN] a_stack;
+    inline int i;
+
+    for i = 0 to KYBER_VECN {
+        a_stack[i] = (u16)[a + 2 * i];
+    }
+
+    poly_compress10_avx2_inline(r, a_stack);
+
+}
+
+u16 Barrett_b0 = 20159;
+u16 Barrett_b1 = 32;
+u16 q = KYBER_Q;
+
+inline
+fn round_reduce_avx2(reg u256 a qx16 b0 b1) -> reg u256 {
+    reg u256 t;
+    t = #VPMULH_16u16(a, b0);
+    t = #VPMULHRS_16u16(t, b1);
+    t = #VPMULL_16u16(t, qx16);
+    a = #VPSUB_16u16(a, t);
+    return a;
+}
+
+inline
+fn poly_round_reduce_avx2_inline(reg ptr u16[KYBER_N] ap) -> reg ptr u16[KYBER_N] {
+
+    reg u256 a;
+    reg u256 qx16 b0 b1;
+    inline int i;
+
+    qx16 = #VPBROADCAST_16u16(q);
+    b0 = #VPBROADCAST_16u16(Barrett_b0);
+    b1 = #VPBROADCAST_16u16(Barrett_b1);
+
+    for i = 0 to 16 {
+        a = ap.[u256 32 * i];
+        a = round_reduce_avx2(a, qx16, b0, b1);
+        ap.[u256 32 * i] = a;
+    }
+    return ap;
+
+}
+
+export
+fn poly_round_reduce_avx2(reg u64 a){
+
+    stack u16[KYBER_N] a_stack;
+    reg ptr u16[KYBER_N] a_ptr;
+    inline int i;
+
+    for i = 0 to KYBER_N {
+        a_stack[i] = (u16)[a + 2 * i];
+    }
+
+    a_ptr = a_stack;
+    a_ptr = poly_round_reduce_avx2_inline(a_ptr);
+    a_stack = a_ptr;
+
+    for i = 0 to KYBER_N {
+        (u16)[a + 2 * i] = a_stack[i];
+    }
+
+}
