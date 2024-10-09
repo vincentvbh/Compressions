@@ -81,11 +81,51 @@ u8[32] compress10_shuffle = { 0,  1,  2,  3,  4,  8,  9, 10,
                               9, 10, 11, 12, -1, -1, -1, -1,
                              -1, -1,  0,  1,  2,  3,  4,  8};
 
+// Inputs:
+// forall i = 0, ..., 15, a_i with -q/2 <= a_i <= q/2
+// Outputs:
+// forall i = 0, ..., 15, round( 1024 a_i / q) & 1023
+inline
+fn compress10_16x16_inline(reg u256 a b0 b1 b2 mask) -> reg u256 {
+
+    reg u256 p0 p1;
+
+    p0 = #VPMULH_16u16(a, b0);
+    p1 = #VPMULL_16u16(a, b1);
+    p0 = #VPADD_16u16(p0, p1);
+    p0 = #VPMULHRS_16u16(p0, b2);
+    p0 = #VPAND_256(p0, mask);
+
+    return p0;
+
+}
+
+// Inputs:
+// forall i = 0, ..., 15, a_i with 0 <= a_i < 1024
+// Outputs:
+// lo32(hi) || lo = lo10(a15) || ... || lo10(a0)
+inline
+fn pack10_16x16(reg u256 a shift sllv_indx shuffle) -> reg u128, reg u128 {
+
+    reg u128 lo hi;
+
+    a = #VPMADDWD_256(a, shift);
+    a = #VPSLLV_8u32(a, sllv_indx);
+    a = #VPSRL_4u64(a, 12);
+    a = #VPSHUFB_256(a, shuffle);
+
+    lo = (128u)a;
+    hi = #VEXTRACTI128(a, 1);
+    lo = #VPBLEND_8u16(lo, hi, 0xe0);
+
+    return lo, hi;
+
+}
+
 inline
 fn polyvec_compress10_avx2_inline(reg u64 r, stack u16[KYBER_VECN] a){
 
     reg u256 a0;
-    reg u256 p0 p1;
     reg u128 lo hi;
     reg u256 b0 b1 b2;
     reg u256 mask10 shift sllv_indx shuffle;
@@ -102,29 +142,10 @@ fn polyvec_compress10_avx2_inline(reg u64 r, stack u16[KYBER_VECN] a){
     for i = 0 to KYBER_VECN / 16 {
 
         a0 = a[u256 i];
-
-        p0 = #VPMULH_16u16(a0, b0);
-        p1 = #VPMULL_16u16(a0, b1);
-        p0 = #VPADD_16u16(p0, p1);
-        p0 = #VPMULHRS_16u16(p0, b2);
-
-        a0 = #VPAND_256(p0, mask10);
-
-        a0 = #VPMADDWD_256(a0, shift);
-
-        a0 = #VPSLLV_8u32(a0, sllv_indx);
-        a0 = #VPSRL_4u64(a0, 12);
-
-        a0 = #VPSHUFB_256(a0, shuffle);
-
-        lo = (128u)a0;
-        hi = #VEXTRACTI128(a0, 1);
-
-        lo = #VPBLEND_8u16(lo, hi, 0xe0);
-
-        (u128)[r + 0] = lo;
-        (u32)[r + 16] = #VPEXTR_32(hi, 0);
-        r += 20;
+        a0 = compress10_16x16_inline(a0, b0, b1, b2, mask10);
+        lo, hi = pack10_16x16(a0, shift, sllv_indx, shuffle);
+        (u128)[r + i * 20 + 0] = lo;
+        (u32)[r + i * 20 + 16] = #VPEXTR_32(hi, 0);
 
     }
 
@@ -148,6 +169,10 @@ u16 Barrett_b0 = 20159;
 u16 Barrett_b1 = 32;
 u16 q = KYBER_Q;
 
+// Inputs:
+// forall i = 0, ..., 15, a_i with -32768 <= a < 32768
+// Outputs:
+// forall i = 0, ..., 15, c_i = a_i - round(a_i/ q) q so -q/2 <= c_i <= q/2
 inline
 fn round_reduce_avx2(reg u256 a qx16 b0 b1) -> reg u256 {
     reg u256 t;
@@ -198,3 +223,5 @@ fn poly_round_reduce_avx2(reg u64 a){
     }
 
 }
+
+
