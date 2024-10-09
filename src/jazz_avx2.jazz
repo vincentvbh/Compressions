@@ -82,7 +82,7 @@ u8[32] compress10_shuffle = { 0,  1,  2,  3,  4,  8,  9, 10,
                              -1, -1,  0,  1,  2,  3,  4,  8};
 
 inline
-fn poly_compress10_avx2_inline(reg u64 r, stack u16[KYBER_VECN] a){
+fn polyvec_compress10_avx2_inline(reg u64 r, stack u16[KYBER_VECN] a){
 
     reg u256 a0;
     reg u256 p0 p1;
@@ -131,7 +131,7 @@ fn poly_compress10_avx2_inline(reg u64 r, stack u16[KYBER_VECN] a){
 }
 
 export
-fn poly_compress10_avx2_jazz(reg u64 r, reg u64 a){
+fn polyvec_compress10_avx2_jazz(reg u64 r, reg u64 a){
 
     stack u16[KYBER_VECN] a_stack;
     inline int i;
@@ -140,7 +140,7 @@ fn poly_compress10_avx2_jazz(reg u64 r, reg u64 a){
         a_stack[i] = (u16)[a + 2 * i];
     }
 
-    poly_compress10_avx2_inline(r, a_stack);
+    polyvec_compress10_avx2_inline(r, a_stack);
 
 }
 

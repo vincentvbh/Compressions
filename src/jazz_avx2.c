@@ -17,7 +17,7 @@
 extern
 void poly_compress4_avx2_jazz(uint8_t r[128], const int16_t a[KYBER_N]);
 extern
-void poly_compress10_avx2_jazz(uint8_t r[320], const int16_t a[KYBER_N]);
+void polyvec_compress10_avx2_jazz(uint8_t r[320], const int16_t a[KYBER_N]);
 
 extern
 void poly_round_reduce_avx2(int16_t a[KYBER_N]);
@@ -263,9 +263,9 @@ int main(void){
 
     __attribute__ ((aligned(32))) int16_t a[KYBER_K * KYBER_N];
     int16_t poly_a[KYBER_N], poly_b[KYBER_N], poly_c[KYBER_N];
-    uint8_t ref[352], res[KYBER_K * 352];
+    uint8_t ref[KYBER_K * 352], res[KYBER_K * 352];
 
-    for(size_t i = 0; i < KYBER_N; i++){
+    for(size_t i = 0; i < KYBER_K * KYBER_N; i++){
         a[i] = rand() % KYBER_Q;
         a[i] -= KYBER_Q / 2;
     }
@@ -277,10 +277,12 @@ int main(void){
 
     printf("poly_compress4 is correct!\n");
 
-    poly_compress10(ref, a);
-    poly_compress10_avx2_jazz(res, a);
+    for(size_t i = 0; i < KYBER_K; i++){
+        poly_compress10(ref + i * 320, a + i * KYBER_N);
+    }
+    polyvec_compress10_avx2_jazz(res, a);
 
-    assert(memcmp(ref, res, 320) == 0);
+    assert(memcmp(ref, res, KYBER_K * 320) == 0);
 
     printf("poly_compress10 is correct!\n");
 
