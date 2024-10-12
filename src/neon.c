@@ -256,35 +256,50 @@ void poly_compress11(uint8_t r[352], const int16_t a[KYBER_N]){
 
 }
 
-static inline
-int8x16_t shift_with_holes_b(int8x16_t a, const int8x16_t mask_lo, const int8x16_t mask_hi, const size_t shift_i){
-    return (int8x16_t)vorrq_s16((int16x8_t)vandq_s8(a, mask_lo),
-                                 vshrq_n_s16((int16x8_t)vandq_s8(a, mask_hi), shift_i));
-}
+#define SHIFT_WITH_HOLES_B(a, mask_lo, mask_hi, shift_i) ({ \
+            int8x16_t val; \
+            do { \
+                val = (int8x16_t)vorrq_s16((int16x8_t)vandq_s8(a, mask_lo), \
+                                  vshrq_n_s16((int16x8_t)vandq_s8(a, mask_hi), shift_i)); \
+            } while(0); \
+            val; \
+        })
 
-static inline
-int8x16_t shift_with_holes_b_lazy(int8x16_t a, const int8x16_t mask_hi, const size_t shift_i){
-    return (int8x16_t)vorrq_s16((int16x8_t)a,
-                                 vshrq_n_s16((int16x8_t)vandq_s8(a, mask_hi), shift_i));
-}
+#define SHIFT_WITH_HOLES_B_LAZY(a, mask_hi, shift_i) ({ \
+            int8x16_t val; \
+            do { \
+                val = (int8x16_t)vorrq_s16((int16x8_t)a, \
+                                 vshrq_n_s16((int16x8_t)vandq_s8(a, mask_hi), shift_i)); \
+            } while(0); \
+            val; \
+        })
 
-static inline
-int8x16_t shift_with_holes_b_very_lazy(int8x16_t a, const size_t shift_i){
-    return (int8x16_t)vorrq_s16((int16x8_t)a,
-                                 vshrq_n_s16((int16x8_t)a, shift_i));
-}
+#define SHIFT_WITH_HOLES_B_VERY_LAZY(a, shift_i) ({ \
+            int8x16_t val; \
+            do { \
+                val = (int8x16_t)vorrq_s16((int16x8_t)a, \
+                                 vshrq_n_s16((int16x8_t)a, shift_i)); \
+            } while(0); \
+            val; \
+        })
 
-static inline
-int16x8_t shift_with_holes_h(int16x8_t a, const int16x8_t mask_lo, const int16x8_t mask_hi, const size_t shift_i){
-    return (int16x8_t)vorrq_s32((int32x4_t)vandq_s16(a, mask_lo),
-                                 vshrq_n_s32((int32x4_t)vandq_s16(a, mask_hi), shift_i));
-}
+#define SHIFT_WITH_HOLES_H(a, mask_lo, mask_hi, shift_i) ({ \
+            int16x8_t val; \
+            do { \
+                val = (int16x8_t)vorrq_s32((int32x4_t)vandq_s16(a, mask_lo), \
+                                 vshrq_n_s32((int32x4_t)vandq_s16(a, mask_hi), shift_i)); \
+            } while(0); \
+            val; \
+        })
 
-static inline
-int32x4_t shift_with_holes_s(int32x4_t a, const int32x4_t mask_lo, const int32x4_t mask_hi, const size_t shift_i){
-    return (int32x4_t)vorrq_s64((int64x2_t)vandq_s32(a, mask_lo),
-                                 vshrq_n_s64((int64x2_t)vandq_s32(a, mask_hi), shift_i));
-}
+#define SHIFT_WITH_HOLES_S(a, mask_lo, mask_hi, shift_i) ({ \
+            int32x4_t val; \
+            do { \
+                val = (int32x4_t)vorrq_s64((int64x2_t)vandq_s32(a, mask_lo), \
+                                 vshrq_n_s64((int64x2_t)vandq_s32(a, mask_hi), shift_i)); \
+            } while(0); \
+            val; \
+        })
 
 void poly_compress1_neon(uint8_t r[32], const int16_t a[KYBER_N]){
 
@@ -326,18 +341,18 @@ void poly_compress1_neon(uint8_t r[32], const int16_t a[KYBER_N]){
 
         for(size_t j = 0; j < 16; j += 2){
             tvec[j] = (int16x8_t)vmovn_high_s16(vmovn_s16(tvec[j]), tvec[j + 1]);
-            tvec[j] = (int16x8_t)shift_with_holes_b_very_lazy((int8x16_t)tvec[j], 7);
+            tvec[j] = (int16x8_t)SHIFT_WITH_HOLES_B_VERY_LAZY((int8x16_t)tvec[j], 7);
         }
 
         for(size_t j = 0; j < 16; j += 4){
             tvec[j] = (int16x8_t)vmovn_high_s16(vmovn_s16(tvec[j]), tvec[j + 2]);
-            tvec[j] = (int16x8_t)shift_with_holes_b_very_lazy((int8x16_t)tvec[j], 6);
+            tvec[j] = (int16x8_t)SHIFT_WITH_HOLES_B_VERY_LAZY((int8x16_t)tvec[j], 6);
         }
 
         tvec[0] = (int16x8_t)vmovn_high_s16(vmovn_s16(tvec[0]), tvec[4]);
         tvec[8] = (int16x8_t)vmovn_high_s16(vmovn_s16(tvec[8]), tvec[12]);
-        tvec[0] = (int16x8_t)shift_with_holes_b_very_lazy((int8x16_t)tvec[0], 4);
-        tvec[8] = (int16x8_t)shift_with_holes_b_very_lazy((int8x16_t)tvec[8], 4);
+        tvec[0] = (int16x8_t)SHIFT_WITH_HOLES_B_VERY_LAZY((int8x16_t)tvec[0], 4);
+        tvec[8] = (int16x8_t)SHIFT_WITH_HOLES_B_VERY_LAZY((int8x16_t)tvec[8], 4);
 
         tvec[0] = (int16x8_t)vmovn_high_s16(vmovn_s16(tvec[0]), tvec[8]);
 
@@ -399,8 +414,8 @@ void poly_compress4_neon(uint8_t r[128], const int16_t a[KYBER_N]){
         tvec[0] = (int16x8_t)vmovn_high_s16(vmovn_s16(tvec[0]), tvec[1]);
         tvec[2] = (int16x8_t)vmovn_high_s16(vmovn_s16(tvec[2]), tvec[3]);
 
-        tvec[0] = (int16x8_t)shift_with_holes_b_very_lazy((int8x16_t)tvec[0], 4);
-        tvec[2] = (int16x8_t)shift_with_holes_b_very_lazy((int8x16_t)tvec[2], 4);
+        tvec[0] = (int16x8_t)SHIFT_WITH_HOLES_B_VERY_LAZY((int8x16_t)tvec[0], 4);
+        tvec[2] = (int16x8_t)SHIFT_WITH_HOLES_B_VERY_LAZY((int8x16_t)tvec[2], 4);
 
         tvec[0] = (int16x8_t)vmovn_high_s16(vmovn_s16(tvec[0]), tvec[2]);
 
@@ -446,16 +461,16 @@ void poly_compress5_neon(uint8_t r[160], const int16_t a[KYBER_N]){
 
         tvec[0] = vmovn_high_s32(vmovn_s32((int32x4_t)tvec[0]), (int32x4_t)tvec[1]);
 
-        tvec[0] = shift_with_holes_h(tvec[0], mask_h_lo, mask_h_hi, 6);
-        tvec[0] = (int16x8_t)shift_with_holes_s((int32x4_t)tvec[0], mask_w_lo, mask_w_hi, 12);
+        tvec[0] = SHIFT_WITH_HOLES_H(tvec[0], mask_h_lo, mask_h_hi, 6);
+        tvec[0] = (int16x8_t)SHIFT_WITH_HOLES_S((int32x4_t)tvec[0], mask_w_lo, mask_w_hi, 12);
 
 #else
 
         tvec[0] = (int16x8_t)vmovn_high_s16(vmovn_s16(tvec[0]), tvec[1]);
 
-        tvec[0] = (int16x8_t)shift_with_holes_b((int8x16_t)tvec[0], mask_b_lo, mask_b_hi, 3);
-        tvec[0] = shift_with_holes_h(tvec[0], mask_h_lo, mask_h_hi, 6);
-        tvec[0] = (int16x8_t)shift_with_holes_s((int32x4_t)tvec[0], mask_w_lo, mask_w_hi, 12);
+        tvec[0] = (int16x8_t)SHIFT_WITH_HOLES_B((int8x16_t)tvec[0], mask_b_lo, mask_b_hi, 3);
+        tvec[0] = SHIFT_WITH_HOLES_H(tvec[0], mask_h_lo, mask_h_hi, 6);
+        tvec[0] = (int16x8_t)SHIFT_WITH_HOLES_S((int32x4_t)tvec[0], mask_w_lo, mask_w_hi, 12);
 
 #endif
 
@@ -498,8 +513,8 @@ void poly_compress10_neon(uint8_t r[320], const int16_t a[KYBER_N]){
         tvec = vrshrq_n_s16(tvec, 6);
         tvec = vandq_s16(tvec, mask10);
 
-        tvec = shift_with_holes_h(tvec, mask_h_lo, mask_h_hi, 6);
-        tvec = (int16x8_t)shift_with_holes_s((int32x4_t)tvec, mask_w_lo, mask_w_hi, 12);
+        tvec = SHIFT_WITH_HOLES_H(tvec, mask_h_lo, mask_h_hi, 6);
+        tvec = (int16x8_t)SHIFT_WITH_HOLES_S((int32x4_t)tvec, mask_w_lo, mask_w_hi, 12);
 
         vst1q_s16((int16_t*)t, tvec);
 
@@ -542,8 +557,8 @@ void poly_compress11_neon(uint8_t r[352], const int16_t a[KYBER_N]){
         tvec = vrshrq_n_s16(tvec, 5);
         tvec = vandq_s16(tvec, mask11);
 
-        tvec = shift_with_holes_h(tvec, mask_h_lo, mask_h_hi, 5);
-        tvec = (int16x8_t)shift_with_holes_s((int32x4_t)tvec, mask_w_lo, mask_w_hi, 10);
+        tvec = SHIFT_WITH_HOLES_H(tvec, mask_h_lo, mask_h_hi, 5);
+        tvec = (int16x8_t)SHIFT_WITH_HOLES_S((int32x4_t)tvec, mask_w_lo, mask_w_hi, 10);
 
         vst1q_s16((int16_t*)t, tvec);
 

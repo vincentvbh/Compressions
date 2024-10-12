@@ -1,5 +1,6 @@
 
-CC = gcc
+CC = clang
+# CC = gcc
 
 CFLAGS += -Wall -O3 -mtune=native
 
