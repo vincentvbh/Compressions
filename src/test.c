@@ -16,20 +16,6 @@ int16_t Barrett_round_reduce(int16_t a){
     return a - (int16_t)(((int32_t)a * 20159 + (1 << 25)) >> 26) * KYBER_Q;
 }
 
-int16_t compress_D_Barrett_reduction(int16_t a, const size_t D){
-    int32_t t;
-    if(D == 0){
-        return Barrett_round_reduce(a);
-    }
-    t = (int32_t)a * (1 << D) * 20159;
-    t += (1 << 25);
-    t >>= 26;
-    t &= ((1 << D) - 1);
-    assert((a != KYBER_Q) || (t == 0));
-
-    return t;
-}
-
 int16_t compress_D(int16_t a, const size_t D){
     if(a < 0){
         a += KYBER_Q;
@@ -49,6 +35,10 @@ int16_t quotient_D_sign(int16_t a, const size_t D){
         // To sum up, we negate the input, round it as in the non-negative case, and return the negation of the result.
         return -(int16_t)(( ( ((int32_t)-a) << D) + (KYBER_Q / 2) ) / KYBER_Q);
     }
+}
+
+int16_t mulmod(int16_t a, const size_t D){
+    return ( ((int32_t)a << D) - (int32_t)quotient_D_sign(a, D) * KYBER_Q);
 }
 
 int16_t Barrett_compress_1(int16_t a){
@@ -125,7 +115,6 @@ int16_t Barrett_quotient_1(int16_t a){
     // 19-bit suffices for D = 1
     // 315 = round(2 * 2^19 / q)
     return (((int32_t)a * 315 + (1 << 18)) >> 19);
-    // return (((int32_t)a * 1260 + (1 << 20)) >> 21);
 }
 
 int16_t Barrett_quotient_2(int16_t a){
@@ -221,57 +210,18 @@ int main(void){
     }
     printf("ubound of round reduction: %4d\n", ubound);
 
-    // for(int16_t i = 0; i <= 3329; i++){
-    //     assert(compress_D(i, 1) == compress_D_Barrett_reduction(i, 1));
-    // }
+// ================
+// Modular multiplication
 
-    // for(int16_t i = 0; i <= 3329; i++){
-    //     assert(compress_D(i, 4) == compress_D_Barrett_reduction(i, 4));
-    // }
-
-    for(int16_t i = -1664; i <= 1664; i++){
-        assert(compress_D(i, 1) == Barrett_compress_1(i));
+    for(size_t j = 1; j <= 11; j++){
+        for(int16_t i = -1664; i <= 1664; i++){
+            t = mulmod(i, j);
+            assert((-KYBER_Q / 2 <= t) && (t <= KYBER_Q / 2));
+        }
     }
 
-    for(int16_t i = -1664; i <= 3329; i++){
-        assert(compress_D(i, 2) == Barrett_compress_2(i));
-    }
-
-    for(int16_t i = -1664; i <= 3329; i++){
-        assert(compress_D(i, 3) == Barrett_compress_3(i));
-    }
-
-    for(int16_t i = -1664; i <= 1664; i++){
-        assert(compress_D(i, 4) == Barrett_compress_4(i));
-    }
-
-    for(int16_t i = -1664; i <= 3329; i++){
-        assert(compress_D(i, 5) == Barrett_compress_5(i));
-    }
-
-    for(int16_t i = -1664; i <= 3329; i++){
-        assert(compress_D(i, 6) == Barrett_compress_6(i));
-    }
-
-    for(int16_t i = -1664; i <= 3329; i++){
-        assert(compress_D(i, 7) == Barrett_compress_7(i));
-    }
-
-    for(int16_t i = -1664; i <= 3329; i++){
-        assert(compress_D(i, 8) == Barrett_compress_8(i));
-    }
-
-    for(int16_t i = -1664; i <= 1664; i++){
-        assert(compress_D(i, 9) == Barrett_compress_9(i));
-    }
-
-    for(int16_t i = -1664; i <= 1664; i++){
-        assert(compress_D(i, 10) == Barrett_compress_10(i));
-    }
-
-    for(int16_t i = -1664; i <= 1664; i++){
-        assert(compress_D(i, 11) == Barrett_compress_11(i));
-    }
+// ================
+// Quotient
 
     for(int16_t i = -1664; i <= 1664; i++){
         assert(quotient_D_sign(i, 1) == Barrett_quotient_1(i));
@@ -315,6 +265,53 @@ int main(void){
 
     for(int16_t i = -1664; i <= 1664; i++){
         assert(quotient_D_sign(i, 11) == Barrett_quotient_11(i));
+    }
+
+// ================
+// Compression
+
+    for(int16_t i = -1664; i <= 1664; i++){
+        assert(compress_D(i, 1) == Barrett_compress_1(i));
+    }
+
+    for(int16_t i = -1664; i <= 1664; i++){
+        assert(compress_D(i, 2) == Barrett_compress_2(i));
+    }
+
+    for(int16_t i = -1664; i <= 1664; i++){
+        assert(compress_D(i, 3) == Barrett_compress_3(i));
+    }
+
+    for(int16_t i = -1664; i <= 1664; i++){
+        assert(compress_D(i, 4) == Barrett_compress_4(i));
+    }
+
+    for(int16_t i = -1664; i <= 1664; i++){
+        assert(compress_D(i, 5) == Barrett_compress_5(i));
+    }
+
+    for(int16_t i = -1664; i <= 1664; i++){
+        assert(compress_D(i, 6) == Barrett_compress_6(i));
+    }
+
+    for(int16_t i = -1664; i <= 1664; i++){
+        assert(compress_D(i, 7) == Barrett_compress_7(i));
+    }
+
+    for(int16_t i = -1664; i <= 1664; i++){
+        assert(compress_D(i, 8) == Barrett_compress_8(i));
+    }
+
+    for(int16_t i = -1664; i <= 1664; i++){
+        assert(compress_D(i, 9) == Barrett_compress_9(i));
+    }
+
+    for(int16_t i = -1664; i <= 1664; i++){
+        assert(compress_D(i, 10) == Barrett_compress_10(i));
+    }
+
+    for(int16_t i = -1664; i <= 1664; i++){
+        assert(compress_D(i, 11) == Barrett_compress_11(i));
     }
 
 
