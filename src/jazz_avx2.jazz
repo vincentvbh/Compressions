@@ -90,9 +90,13 @@ fn compress10_16x16_inline(reg u256 a b0 b1 b2 mask) -> reg u256 {
 
     reg u256 p0 p1;
 
+    // 0
     p0 = #VPMULH_16u16(a, b0);
+    // -20
     p1 = #VPMULL_16u16(a, b1);
+    // -19
     p0 = #VPADD_16u16(p0, p1);
+    // 0
     p0 = #VPMULHRS_16u16(p0, b2);
     p0 = #VPAND_256(p0, mask);
 

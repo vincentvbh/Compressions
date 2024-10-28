@@ -301,6 +301,7 @@ void poly_compress11(uint8_t r[352], const int16_t a[KYBER_N]){
             val; \
         })
 
+static
 void poly_compress1_neon(uint8_t r[32], const int16_t a[KYBER_N]){
 
     int16x8_t tvec[16];
@@ -365,6 +366,7 @@ void poly_compress1_neon(uint8_t r[32], const int16_t a[KYBER_N]){
 
 }
 
+static
 void poly_compress4_neon(uint8_t r[128], const int16_t a[KYBER_N]){
 
     int16x8_t tvec[4];
@@ -428,6 +430,7 @@ void poly_compress4_neon(uint8_t r[128], const int16_t a[KYBER_N]){
 
 }
 
+static
 void poly_compress5_neon(uint8_t r[160], const int16_t a[KYBER_N]){
 
     int16x8_t tvec[2];
@@ -492,6 +495,7 @@ void poly_compress5_neon(uint8_t r[160], const int16_t a[KYBER_N]){
 
 }
 
+static
 void poly_compress10_neon(uint8_t r[320], const int16_t a[KYBER_N]){
 
     uint16_t t[8];
@@ -534,6 +538,7 @@ void poly_compress10_neon(uint8_t r[320], const int16_t a[KYBER_N]){
 
 }
 
+static
 void poly_compress11_neon(uint8_t r[352], const int16_t a[KYBER_N]){
 
     uint64_t lo64, hi64;
