@@ -87,8 +87,8 @@ int16_t Barrett_quotient_7(int16_t a){
 }
 
 int16_t Barrett_quotient_8(int16_t a){
-    // 12-bit suffices for D = 8
-    // 315 = round(256 * 2^12 / q)
+    // 21-bit suffices for D = 8
+    // 161271 = round(256 * 2^21 / q)
     return (((int32_t)a * 161271 + (1 << 20)) >> 21);
 }
 
@@ -124,13 +124,13 @@ int16_t Barrett_quotient_large_9(int16_t a){
 }
 
 int16_t Barrett_quotient_large_10(int16_t a){
-    // 23-bit suffices for D = 9
+    // 23-bit suffices for D = 10
     // 2580335 = round(1024 * 2^23 / q)
     return (((int64_t)a * 2580335 + (1 << 22)) >> 23);
 }
 
 int16_t Barrett_quotient_large_11(int16_t a){
-    // 22-bit suffices for D = 9
+    // 22-bit suffices for D = 11
     // 2580335 = round(2048 * 2^22 / q)
     return (((int64_t)a * 2580335 + (1 << 21)) >> 22);
 }
@@ -181,8 +181,8 @@ int16_t Barrett_compress_7(int16_t a){
 }
 
 int16_t Barrett_compress_8(int16_t a){
-    // 12-bit suffices for D = 8
-    // 315 = round(256 * 2^12 / q)
+    // 21-bit suffices for D = 8
+    // 161271 = round(256 * 2^21 / q)
     return (((int32_t)a * 161271 + (1 << 20)) >> 21) & 0xff;
 }
 
@@ -340,6 +340,53 @@ int main(void){
     }
 
     for(int16_t i = -3328; i <= 3328; i++){
+        assert(quotient_D_sign(i, 11) == Barrett_quotient_large_11(i));
+    }
+
+// ================
+// Quotient for inputs in [-3329, 3329]
+
+    for(int16_t i = -3329; i <= 3329; i++){
+        assert(quotient_D_sign(i, 1) == Barrett_quotient_1(i));
+    }
+
+    for(int16_t i = -3329; i <= 3329; i++){
+        assert(quotient_D_sign(i, 2) == Barrett_quotient_2(i));
+    }
+
+    for(int16_t i = -3329; i <= 3329; i++){
+        assert(quotient_D_sign(i, 3) == Barrett_quotient_3(i));
+    }
+
+    for(int16_t i = -3329; i <= 3329; i++){
+        assert(quotient_D_sign(i, 4) == Barrett_quotient_4(i));
+    }
+
+    for(int16_t i = -3329; i <= 3329; i++){
+        assert(quotient_D_sign(i, 5) == Barrett_quotient_5(i));
+    }
+
+    for(int16_t i = -3329; i <= 3329; i++){
+        assert(quotient_D_sign(i, 6) == Barrett_quotient_6(i));
+    }
+
+    for(int16_t i = -3329; i <= 3329; i++){
+        assert(quotient_D_sign(i, 7) == Barrett_quotient_7(i));
+    }
+
+    for(int16_t i = -3329; i <= 3329; i++){
+        assert(quotient_D_sign(i, 8) == Barrett_quotient_8(i));
+    }
+
+    for(int16_t i = -3329; i <= 3329; i++){
+        assert(quotient_D_sign(i, 9) == Barrett_quotient_large_9(i));
+    }
+
+    for(int16_t i = -3329; i <= 3329; i++){
+        assert(quotient_D_sign(i, 10) == Barrett_quotient_large_10(i));
+    }
+
+    for(int16_t i = -3329; i <= 3329; i++){
         assert(quotient_D_sign(i, 11) == Barrett_quotient_large_11(i));
     }
 
