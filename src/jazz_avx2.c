@@ -22,15 +22,20 @@ void polyvec_compress10_avx2_jazz(uint8_t r[320], const int16_t a[KYBER_N]);
 extern
 void poly_round_reduce_avx2(int16_t a[KYBER_N]);
 
-void poly_round_reduce(int16_t a[KYBER_N]){
+int16_t reduce(int16_t a){
+    a %= KYBER_Q;
+    if(a > (KYBER_Q / 2)){
+        a -= KYBER_Q;
+    }
+    if(a < -(KYBER_Q / 2)){
+        a += KYBER_Q;
+    }
+    return a;
+}
+
+void poly_reduce(int16_t a[KYBER_N]){
     for(size_t i = 0; i < KYBER_N; i++){
-        a[i] = a[i] % KYBER_Q;
-        if(a[i] > (KYBER_Q / 2)){
-            a[i] -= KYBER_Q;
-        }
-        if(a[i] < -(KYBER_Q / 2)){
-            a[i] += KYBER_Q;
-        }
+        a[i] = reduce(a[i]);
     }
 }
 
@@ -290,7 +295,7 @@ int main(void){
         poly_a[i] = poly_b[i] = rand();
     }
 
-    poly_round_reduce(poly_a);
+    poly_reduce(poly_a);
     poly_round_reduce_avx2(poly_b);
 
     assert(memcmp(poly_a, poly_b, sizeof(int16_t) * KYBER_N) == 0);
