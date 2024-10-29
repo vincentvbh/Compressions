@@ -3,9 +3,9 @@ CC ?= gcc
 
 CFLAGS += -Wall -O3
 
-AARCH32_CROSS_CC ?= arm-linux-gnueabi-gcc-12
+AARCH32_CROSS_CC = arm-linux-gnueabi-gcc-12
 AARCH32_CROSS_FLAGS = -march=armv7-a -z noexecstack -g -static
-AARCH32_ASM = __asm_compress_armv7e-m.s
+AARCH32_ASM = __asm_compress_armv7e-m.S
 
 AARCH64_FLAGS = -march=armv8-a
 AVX2_FLAGS = -mavx2 -z noexecstack

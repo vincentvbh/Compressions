@@ -72,7 +72,6 @@ int16_t Barrett_compress_11(int16_t a){
     return pmulhrsw(pmulhw(a, -20553) + pmullw(a, 20), (1 << 10)) & 0x7ff;
 }
 
-// optimize this one
 void poly_compress1(uint8_t r[32], const int16_t a[KYBER_N]){
 
     unsigned int i,j;
