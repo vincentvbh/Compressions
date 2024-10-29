@@ -90,7 +90,7 @@ void poly_compress4(uint8_t r[128], const int16_t a[KYBER_N]){
     for(j=0;j<KYBER_N/8;j++) {
         for(k=0;k<8;k++) {
             u = a[8*j+k];
-            t[k] = Barreett_compress_4(u);
+            t[k] = Barrett_compress_4(u);
 
             // this is equivalent to first mapping to positive
             // standard representatives followed by
