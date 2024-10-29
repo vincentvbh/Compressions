@@ -114,9 +114,7 @@ int16_t Barrett_compress_11(int16_t a){
     return (smlawx(1 << 4, a, 1290167) >> 5) & 0x7ff;
 }
 
-extern void __asm_compress1(int16_t *des, int16_t *src);
-extern void __asm_compress4(int16_t *des, int16_t *src);
-extern void __asm_compress10(int16_t *des, int16_t *src);
+
 
 void poly_compress1(uint8_t r[32], const int16_t a[KYBER_N]){
 
@@ -253,7 +251,13 @@ void poly_compress11(uint8_t r[352], const int16_t a[KYBER_N]){
 
 }
 
+extern void __asm_compress1(int16_t *des, int16_t *src);
+extern void __asm_compress4(int16_t *des, int16_t *src);
+extern void __asm_compress10(int16_t *des, int16_t *src);
+
+extern void __asm_poly_compress1(uint8_t *des, int16_t *src);
 extern void __asm_poly_compress4(uint8_t *des, int16_t *src);
+extern void __asm_poly_compress10(uint8_t *des, int16_t *src);
 
 int main(void){
 
@@ -289,10 +293,20 @@ int main(void){
 // ================
 // Polynomial compression
 
+    poly_compress1(ref, a);
+    __asm_poly_compress1(res, a);
+
+    assert(memcmp(ref, res, 32) == 0);
+
     poly_compress4(ref, a);
     __asm_poly_compress4(res, a);
 
     assert(memcmp(ref, res, 128) == 0);
+
+    poly_compress10(ref, a);
+    __asm_poly_compress10(res, a);
+
+    assert(memcmp(ref, res, 320) == 0);
 
     printf("Polynomial compression finished!\n");
 
