@@ -1,12 +1,14 @@
 
-CC = clang
-# CC = gcc
+CC ?= gcc
+ARMv7M_CROSS_CC ?= arm-linux-gnueabi-gcc-12
 
-CFLAGS += -Wall -O3 -mtune=native
+CFLAGS += -Wall -O3
 
-# AARCH64_FLAGS = -march=armv8-a+dotprod
+ARMv7M_CROSS_FLAGS = -march=armv7 -z noexecstack -g -static
 AARCH64_FLAGS = -march=armv8-a
 AVX2_FLAGS = -mavx2 -z noexecstack
+
+
 
 JASMINC = jasminc
 
@@ -44,6 +46,9 @@ neon: neon.c
 armv7e-m_ref: armv7e-m_ref.c
 	$(CC) $(CFLAGS) $< -o $@
 
+armv7e-m: armv7e-m.c
+	$(ARMv7M_CROSS_CC) $(CFLAGS) $(ARMv7M_CROSS_FLAGS) $< -o $@
+
 .PHOYNY: clean
 
 clean:
@@ -56,3 +61,4 @@ clean:
 	rm -f neon_ref
 	rm -f neon
 	rm -f armv7e-m_ref
+	rm -f armv7e-m
