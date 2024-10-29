@@ -64,6 +64,8 @@ __asm_poly_compress1:
 
     movw r2, #:lower16:2580335
     movt r2, #:upper16:2580335
+    mov.w r3, #1
+    orr.w r3, r3, r3, lsl #16
 
 .rept 32
 
@@ -85,6 +87,22 @@ __asm_poly_compress1:
     smmulr r10, r10, r2
     smmulr r11, r11, r2
 
+.if 1
+    pkhbt r4, r4, r5, lsl #16
+    pkhbt r6, r6, r7, lsl #16
+    pkhbt r8, r8, r9, lsl #16
+    pkhbt r10, r10, r11, lsl #16
+
+    and.w r4, r4, r3
+    and.w r6, r6, r3
+    and.w r8, r8, r3
+    and.w r10, r10, r3
+
+    orr.w r4, r4, r6, lsl #2
+    orr.w r4, r4, r8, lsl #4
+    orr.w r4, r4, r10, lsl #6
+    orr.w r4, r4, r4, lsr #15
+.else
     ubfx.w r4, r4, #0, #1
     ubfx.w r5, r5, #0, #1
     ubfx.w r6, r6, #0, #1
@@ -101,6 +119,7 @@ __asm_poly_compress1:
     orr.w r4, r4, r9, lsl #5
     orr.w r4, r4, r10, lsl #6
     orr.w r4, r4, r11, lsl #7
+.endif
 
     strb.w r4, [r0], #1
 
@@ -116,6 +135,8 @@ __asm_poly_compress4:
 
     movw r2, #:lower16:20642679
     movt r2, #:upper16:20642679
+    mov.w r3, #0xf
+    orr.w r3, r3, r3, lsl #16
 
 .rept 64
 
@@ -129,6 +150,16 @@ __asm_poly_compress4:
     smmulr r6, r6, r2
     smmulr r7, r7, r2
 
+.if 1
+    pkhbt r4, r4, r5, lsl #16
+    pkhbt r6, r6, r7, lsl #16
+
+    and.w r4, r4, r3
+    and.w r6, r6, r3
+
+    orr.w r4, r4, r6, lsl #8
+    orr.w r4, r4, r4, lsr #12
+.else
     ubfx.w r4, r4, #0, #4
     ubfx.w r5, r5, #0, #4
     ubfx.w r6, r6, #0, #4
@@ -137,6 +168,7 @@ __asm_poly_compress4:
     orr.w r4, r4, r5, lsl #4
     orr.w r4, r4, r6, lsl #8
     orr.w r4, r4, r7, lsl #12
+.endif
 
     strh.w r4, [r0], #2
 
