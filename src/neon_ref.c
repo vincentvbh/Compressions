@@ -54,6 +54,24 @@ int16_t ssra(int16_t c, const int16_t a, const size_t i){
     return c + sshr(a, i);
 }
 
+int16_t quotient_D_sign(int16_t a, const size_t D){
+    if(a >= 0){
+        // round in the non-negative case.
+        return (int16_t)(( ( ((int32_t)a) << D) + (KYBER_Q / 2) ) / KYBER_Q);
+    }else{
+        // In C, division rounds the negative results toward zero instead of rounding-half-up.
+        // Observe that for a positive real number r, round(-r) = -round(r) expect for r an half-integer for round
+        // the rounding-half-up function.
+        // Fortunately, since KYBER_Q is odd, a * 2^D / KYBER_Q is never a half-integer.
+        // To sum up, we negate the input, round it as in the non-negative case, and return the negation of the result.
+        return -(int16_t)(( ( ((int32_t)-a) << D) + (KYBER_Q / 2) ) / KYBER_Q);
+    }
+}
+
+int16_t mulmod(int16_t a, const size_t D){
+    return ( ((int32_t)a << D) - (int32_t)quotient_D_sign(a, D) * KYBER_Q);
+}
+
 int16_t compress_D(int16_t a, const size_t D){
     if(a < 0){
         a += KYBER_Q;
@@ -61,63 +79,117 @@ int16_t compress_D(int16_t a, const size_t D){
     return (int16_t)(( ( ((int32_t)a) << D) + (KYBER_Q / 2) ) / KYBER_Q) & ((1 << D) - 1);
 }
 
+// ================
+// Quotient
+
 int16_t Barrett_quotient_1(int16_t a){
     // 19-bit suffices for D = 1
     // 315 = round(2 * 2^19 / q)
-    // return (((int32_t)a * 315 + (1 << 18)) >> 19) & 0x1;
-    return srshr(sqdmulh(a, 315), 4) & 0x1;
+    return srshr(sqdmulh(a, 315), 4);
 }
 
 int16_t Barrett_quotient_4(int16_t a){
     // 16-bit suffices for D = 4
     // 315 = round(16 * 2^16 / q)
-    // return (((int32_t)a * 315 + (1 << 15)) >> 16) & 0xf;
-    return shadd(sqdmulh(a, 315), 1) & 0xf;
+    return shadd(sqdmulh(a, 315), 1);
 }
 
 int16_t Barrett_quotient_5(int16_t a){
     // 15-bit suffices for D = 5
     // 315 = round(32 * 2^15 / q)
-    // return (((int32_t)a * 315 + (1 << 14)) >> 15) & 0x1f;
-    return sqrdmulh(a, 315) & 0x1f;
+    return sqrdmulh(a, 315);
 }
 
 int16_t Barrett_quotient_10(int16_t a){
     // 22-bit suffices for D = 10
     // 1290167 = round(1024 * 2^22 / q)
-    // beware that adding prior to shifting overflows (32-bit), we must shift, add, and then shift here.
-    // return ( ((((int32_t)a * 1290167) >> 1) + (1 << 20)) >> 21) & 0x3ff;
-    return srshr((mla(shadd(sqdmulh(a, -20553), 0), a, 20)), 6) & 0x3ff;
+    return srshr((mla(shadd(sqdmulh(a, -20553), 0), a, 20)), 6);
 }
 
 int16_t Barrett_quotient_11(int16_t a){
     // 21-bit suffices for D = 11
     // 1290167 = round(2048 * 2^21 / q)
-    // beware that adding prior to shifting overflows (32-bit), we must shift, add, and then shift here.
-    // return ( ((((int32_t)a * 1290167) >> 1) + (1 << 19)) >> 20) & 0x7ff;
+    return srshr((mla(shadd(sqdmulh(a, -20553), 0), a, 20)), 5);
+}
+
+// ================
+// Compression
+
+int16_t Barrett_compress_1(int16_t a){
+    // 19-bit suffices for D = 1
+    // 315 = round(2 * 2^19 / q)
+    return srshr(sqdmulh(a, 315), 4) & 0x1;
+}
+
+int16_t Barrett_compress_4(int16_t a){
+    // 16-bit suffices for D = 4
+    // 315 = round(16 * 2^16 / q)
+    return shadd(sqdmulh(a, 315), 1) & 0xf;
+}
+
+int16_t Barrett_compress_5(int16_t a){
+    // 15-bit suffices for D = 5
+    // 315 = round(32 * 2^15 / q)
+    return sqrdmulh(a, 315) & 0x1f;
+}
+
+int16_t Barrett_compress_10(int16_t a){
+    // 22-bit suffices for D = 10
+    // 1290167 = round(1024 * 2^22 / q)
+    return srshr((mla(shadd(sqdmulh(a, -20553), 0), a, 20)), 6) & 0x3ff;
+}
+
+int16_t Barrett_compress_11(int16_t a){
+    // 21-bit suffices for D = 11
+    // 1290167 = round(2048 * 2^21 / q)
     return srshr((mla(shadd(sqdmulh(a, -20553), 0), a, 20)), 5) & 0x7ff;
 }
 
 int main(void){
 
+// ================
+// Quotient for inputs in [-1664, 1664]
+
     for(int16_t i = -1664; i <= 1664; i++){
-        assert(compress_D(i, 1) == Barrett_quotient_1(i));
+        assert(quotient_D_sign(i, 1) == Barrett_quotient_1(i));
     }
 
     for(int16_t i = -1664; i <= 1664; i++){
-        assert(compress_D(i, 4) == Barrett_quotient_4(i));
+        assert(quotient_D_sign(i, 4) == Barrett_quotient_4(i));
     }
 
     for(int16_t i = -1664; i <= 1664; i++){
-        assert(compress_D(i, 5) == Barrett_quotient_5(i));
+        assert(quotient_D_sign(i, 5) == Barrett_quotient_5(i));
     }
 
     for(int16_t i = -1664; i <= 1664; i++){
-        assert(compress_D(i, 10) == Barrett_quotient_10(i));
+        assert(quotient_D_sign(i, 10) == Barrett_quotient_10(i));
     }
 
     for(int16_t i = -1664; i <= 1664; i++){
-        assert(compress_D(i, 11) == Barrett_quotient_11(i));
+        assert(quotient_D_sign(i, 11) == Barrett_quotient_11(i));
+    }
+
+// ================
+
+    for(int16_t i = -1664; i <= 1664; i++){
+        assert(compress_D(i, 1) == Barrett_compress_1(i));
+    }
+
+    for(int16_t i = -1664; i <= 1664; i++){
+        assert(compress_D(i, 4) == Barrett_compress_4(i));
+    }
+
+    for(int16_t i = -1664; i <= 1664; i++){
+        assert(compress_D(i, 5) == Barrett_compress_5(i));
+    }
+
+    for(int16_t i = -1664; i <= 1664; i++){
+        assert(compress_D(i, 10) == Barrett_compress_10(i));
+    }
+
+    for(int16_t i = -1664; i <= 1664; i++){
+        assert(compress_D(i, 11) == Barrett_compress_11(i));
     }
 
     printf("Test finished!\n");

@@ -16,13 +16,6 @@ int16_t Barrett_round_reduce(int16_t a){
     return a - (int16_t)(((int32_t)a * 20159 + (1 << 25)) >> 26) * KYBER_Q;
 }
 
-int16_t compress_D(int16_t a, const size_t D){
-    if(a < 0){
-        a += KYBER_Q;
-    }
-    return (int16_t)(( ( ((int32_t)a) << D) + (KYBER_Q / 2) ) / KYBER_Q) & ((1 << D) - 1);
-}
-
 int16_t quotient_D_sign(int16_t a, const size_t D){
     if(a >= 0){
         // round in the non-negative case.
@@ -41,7 +34,14 @@ int16_t mulmod(int16_t a, const size_t D){
     return ( ((int32_t)a << D) - (int32_t)quotient_D_sign(a, D) * KYBER_Q);
 }
 
-// ========
+int16_t compress_D(int16_t a, const size_t D){
+    if(a < 0){
+        a += KYBER_Q;
+    }
+    return (int16_t)(( ( ((int32_t)a) << D) + (KYBER_Q / 2) ) / KYBER_Q) & ((1 << D) - 1);
+}
+
+// ================
 // Quotient
 
 int16_t Barrett_quotient_1(int16_t a){
@@ -114,8 +114,8 @@ int16_t Barrett_quotient_11(int16_t a){
                     (1 << 19)) >> 20);
 }
 
-// ========
-// Quotient large input
+// ================
+// Quotient with large input
 
 int16_t Barrett_quotient_large_9(int16_t a){
     // 23-bit suffices for D = 9
@@ -135,7 +135,7 @@ int16_t Barrett_quotient_large_11(int16_t a){
     return (((int64_t)a * 2580335 + (1 << 21)) >> 22);
 }
 
-// ========
+// ================
 // Compression
 
 int16_t Barrett_compress_1(int16_t a){
@@ -207,8 +207,6 @@ int16_t Barrett_compress_11(int16_t a){
     return ( ((((int32_t)a * 1290167) >> 1) + \
                     (1 << 19)) >> 20) & 0x7ff;
 }
-
-
 
 int main(void){
 
