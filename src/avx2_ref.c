@@ -55,34 +55,71 @@ int16_t compress_D(int16_t a, const size_t D){
 }
 
 // ================
+// Quotient
 
 int16_t Barrett_quotient_1(int16_t a){
     // 19-bit suffices for D = 1
     // 315 = round(2 * 2^19 / q)
-    return pmulhrsw(pmulhw(a, 315), (1 << 12)) & 0x1;
+    return pmulhrsw(pmulhw(a, 315), (1 << 12));
 }
 
 int16_t Barrett_quotient_4(int16_t a){
     // 16-bit suffices for D = 4
     // 315 = round(16 * 2^16 / q)
-    // return (((int32_t)a * 630 + (1 << 16)) >> 17) & 0xf;
-    return pmulhrsw(pmulhw(a, 630), (1 << 14)) & 0xf;
+    // return (((int32_t)a * 630 + (1 << 16)) >> 17);
+    return pmulhrsw(pmulhw(a, 630), (1 << 14));
 }
 
 int16_t Barrett_quotient_5(int16_t a){
     // 15-bit suffices for D = 5
     // 315 = round(32 * 2^15 / q)
-    return pmulhrsw(a, 315) & 0x1f;
+    return pmulhrsw(a, 315);
 }
 
 int16_t Barrett_quotient_10(int16_t a){
     // 22-bit suffices for D = 10
     // 1290167 = round(1024 * 2^22 / q)
     // -20553 + 20 * 2^16 = 1290167
-    return pmulhrsw(pmulhw(a, -20553) + pmullw(a, 20), (1 << 9)) & 0x3ff;
+    return pmulhrsw(pmulhw(a, -20553) + pmullw(a, 20), (1 << 9));
 }
 
 int16_t Barrett_quotient_11(int16_t a){
+    // 21-bit suffices for D = 11
+    // 1290167 = round(2048 * 2^21 / q)
+    // -20553 + 20 * 2^16 = 1290167
+    return pmulhrsw(pmulhw(a, -20553) + pmullw(a, 20), (1 << 10));
+}
+
+// ================
+// Compression
+
+int16_t Barrett_compress_1(int16_t a){
+    // 19-bit suffices for D = 1
+    // 315 = round(2 * 2^19 / q)
+    return pmulhrsw(pmulhw(a, 315), (1 << 12)) & 0x1;
+}
+
+int16_t Barrett_compress_4(int16_t a){
+    // 16-bit suffices for D = 4
+    // 315 = round(16 * 2^16 / q)
+    // return (((int32_t)a * 630 + (1 << 16)) >> 17) & 0xf;
+    return pmulhrsw(pmulhw(a, 630), (1 << 14)) & 0xf;
+}
+
+int16_t Barrett_compress_5(int16_t a){
+    // 15-bit suffices for D = 5
+    // 315 = round(32 * 2^15 / q)
+    return pmulhrsw(a, 315) & 0x1f;
+}
+
+int16_t Barrett_compress_10(int16_t a){
+    // 22-bit suffices for D = 10
+    // 1290167 = round(1024 * 2^22 / q)
+    // -20553 + 20 * 2^16 = 1290167
+    return pmulhrsw(pmulhw(a, -20553) + pmullw(a, 20), (1 << 9)) & 0x3ff;
+}
+
+int16_t Barrett_compress_11(int16_t a){
     // 21-bit suffices for D = 11
     // 1290167 = round(2048 * 2^21 / q)
     // -20553 + 20 * 2^16 = 1290167
@@ -91,24 +128,50 @@ int16_t Barrett_quotient_11(int16_t a){
 
 int main(void){
 
+// ================
+// Quotient for inputs in [-1664, 1664]
+
     for(int16_t i = -1664; i <= 1664; i++){
-        assert(compress_D(i, 1) == Barrett_quotient_1(i));
+        assert(quotient_D_sign(i, 1) == Barrett_quotient_1(i));
     }
 
     for(int16_t i = -1664; i <= 1664; i++){
-        assert(compress_D(i, 4) == Barrett_quotient_4(i));
+        assert(quotient_D_sign(i, 4) == Barrett_quotient_4(i));
     }
 
     for(int16_t i = -1664; i <= 1664; i++){
-        assert(compress_D(i, 5) == Barrett_quotient_5(i));
+        assert(quotient_D_sign(i, 5) == Barrett_quotient_5(i));
     }
 
     for(int16_t i = -1664; i <= 1664; i++){
-        assert(compress_D(i, 10) == Barrett_quotient_10(i));
+        assert(quotient_D_sign(i, 10) == Barrett_quotient_10(i));
     }
 
     for(int16_t i = -1664; i <= 1664; i++){
-        assert(compress_D(i, 11) == Barrett_quotient_11(i));
+        assert(quotient_D_sign(i, 11) == Barrett_quotient_11(i));
+    }
+
+// ================
+// Compression
+
+    for(int16_t i = -1664; i <= 1664; i++){
+        assert(compress_D(i, 1) == Barrett_compress_1(i));
+    }
+
+    for(int16_t i = -1664; i <= 1664; i++){
+        assert(compress_D(i, 4) == Barrett_compress_4(i));
+    }
+
+    for(int16_t i = -1664; i <= 1664; i++){
+        assert(compress_D(i, 5) == Barrett_compress_5(i));
+    }
+
+    for(int16_t i = -1664; i <= 1664; i++){
+        assert(compress_D(i, 10) == Barrett_compress_10(i));
+    }
+
+    for(int16_t i = -1664; i <= 1664; i++){
+        assert(compress_D(i, 11) == Barrett_compress_11(i));
     }
 
     printf("Test finished!\n");

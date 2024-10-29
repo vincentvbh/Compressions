@@ -103,12 +103,14 @@ int16_t Barrett_compress_5(int16_t a){
 int16_t Barrett_compress_10(int16_t a){
     // 22-bit suffices for D = 10
     // 1290167 = round(1024 * 2^22 / q)
+    // -20553 + 20 * 2^16 = 1290167
     return srshr((mla(shadd(sqdmulh(a, -20553), 0), a, 20)), 6) & 0x3ff;
 }
 
 int16_t Barrett_compress_11(int16_t a){
     // 21-bit suffices for D = 11
     // 1290167 = round(2048 * 2^21 / q)
+    // -20553 + 20 * 2^16 = 1290167
     return srshr((mla(shadd(sqdmulh(a, -20553), 0), a, 20)), 5) & 0x7ff;
 }
 
