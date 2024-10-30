@@ -59,6 +59,34 @@ fn __poly_compress1(reg u32 des, stack u16[256] src){
 
 }
 
+inline
+fn __i_poly_compress1(reg ptr u8[32] des, stack u16[256] src) -> reg ptr u8[32] {
+
+    reg u32[8] a;
+    reg u32 b;
+
+    inline int i j;
+
+    // 2580335 = round(2^33 / 3329)
+    b = #MOV(2580335 % 65536);
+    b = #MOVT(b, 2580335 / 65536);
+
+    for i = 0 to 32 {
+
+        for j = 0 to 8 {
+            a[j] = (32s)src[8 * i + j];
+        }
+
+        a[0] = __compress1x8(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], b);
+
+        des[i] = (8u)a[0];
+
+    }
+
+    return des;
+
+}
+
 export
 fn __jazz_poly_compress1(reg u32 des, reg u32 src){
 
@@ -73,6 +101,32 @@ fn __jazz_poly_compress1(reg u32 des, reg u32 src){
     }
 
     __poly_compress1(des, buff);
+
+}
+
+export
+fn __jazz_stack_poly_compress1(reg u32 des, reg u32 src){
+
+    reg u32 t;
+    reg ptr u8[32] des_buff_ptr;
+    stack u16[256] buff;
+    stack u8[32] des_buff;
+
+    inline int i;
+
+    for i = 0 to 256 {
+        t = (32u)(u16)[src + i * 2];
+        buff[i] = (16u)t;
+    }
+
+    des_buff_ptr = des_buff;
+    des_buff_ptr = __i_poly_compress1(des_buff_ptr, buff);
+    des_buff = des_buff_ptr;
+
+    for i = 0 to 32 {
+        t = (32u)des_buff[i];
+        (u8)[des + i] = t;
+    }
 
 }
 
@@ -123,6 +177,33 @@ fn __poly_compress4(reg u32 des, stack u16[256] src){
 
 }
 
+inline
+fn __i_poly_compress4(reg ptr u8[128] des, stack u16[256] src) -> reg ptr u8[128] {
+
+    reg u32[4] a;
+    reg u32 b;
+
+    inline int i j;
+
+    b = #MOV(20642679 % 65536);
+    b = #MOVT(b, 20642679 / 65536);
+
+    for i = 0 to 64 {
+
+        for j = 0 to 4 {
+            a[j] = (32s)src[4 * i + j];
+        }
+
+        a[0] = __compress4x4(a[0], a[1], a[2], a[3], b);
+
+        des.[u16 2 * i] = (16u)a[0];
+
+    }
+
+    return des;
+
+}
+
 export
 fn __jazz_poly_compress4(reg u32 des, reg u32 src){
 
@@ -137,6 +218,32 @@ fn __jazz_poly_compress4(reg u32 des, reg u32 src){
     }
 
     __poly_compress4(des, buff);
+
+}
+
+export
+fn __jazz_stack_poly_compress4(reg u32 des, reg u32 src){
+
+    reg u32 t;
+    reg ptr u8[128] des_buff_ptr;
+    stack u16[256] buff;
+    stack u8[128] des_buff;
+
+    inline int i;
+
+    for i = 0 to 256 {
+        t = (32u)(u16)[src + i * 2];
+        buff[i] = (16u)t;
+    }
+
+    des_buff_ptr = des_buff;
+    des_buff_ptr = __i_poly_compress4(des_buff_ptr, buff);
+    des_buff = des_buff_ptr;
+
+    for i = 0 to 32 {
+        t = (32u)des_buff[i];
+        (u8)[des + i] = t;
+    }
 
 }
 
@@ -189,6 +296,34 @@ fn __poly_compress10(reg u32 des, stack u16[256] src){
 
 }
 
+inline
+fn __i_poly_compress10(reg ptr u8[320] des, stack u16[256] src) -> reg ptr u8[320] {
+
+    reg u32[4] a;
+    reg u32 b;
+
+    inline int i j;
+
+    b = #MOV(1321131424 % 65536);
+    b = #MOVT(b, 1321131424 / 65536);
+
+    for i = 0 to 64 {
+
+        for j = 0 to 4 {
+            a[j] = (32s)src[4 * i + j];
+        }
+
+        a[0], a[3] = __compress10x4(a[0], a[1], a[2], a[3], b);
+
+        des.[u32 5 * i] = a[0];
+        des.[u8 5 * i + 4] = (8u)a[3];
+
+    }
+
+    return des;
+
+}
+
 export
 fn __jazz_poly_compress10(reg u32 des, reg u32 src){
 
@@ -203,6 +338,32 @@ fn __jazz_poly_compress10(reg u32 des, reg u32 src){
     }
 
     __poly_compress10(des, buff);
+
+}
+
+export
+fn __jazz_stack_poly_compress10(reg u32 des, reg u32 src){
+
+    reg u32 t;
+    reg ptr u8[320] des_buff_ptr;
+    stack u16[256] buff;
+    stack u8[320] des_buff;
+
+    inline int i;
+
+    for i = 0 to 256 {
+        t = (32u)(u16)[src + i * 2];
+        buff[i] = (16u)t;
+    }
+
+    des_buff_ptr = des_buff;
+    des_buff_ptr = __i_poly_compress10(des_buff_ptr, buff);
+    des_buff = des_buff_ptr;
+
+    for i = 0 to 32 {
+        t = (32u)des_buff[i];
+        (u8)[des + i] = t;
+    }
 
 }
 
