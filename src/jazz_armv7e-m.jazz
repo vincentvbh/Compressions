@@ -4,14 +4,16 @@ fn __jazz_poly_compress1(reg u32 des, reg u32 src){
 
     reg u32[8] a;
     reg u32 b;
+    reg u32 i;
 
-    inline int i j;
+    inline int j;
 
     // 2580335 = round(2^33 / 3329)
     b = #MOV(2580335 % 65536);
     b = #MOVT(b, 2580335 / 65536);
 
-    for i = 0 to 32 {
+    i = 0;
+    while(i < 32){
 
         for j = 0 to 8 {
             a[j] = (32s)(u16)[src + j * 2];
@@ -30,6 +32,7 @@ fn __jazz_poly_compress1(reg u32 des, reg u32 src){
         (u8)[des] = (8u)a[0];
         des += 1;
 
+        i += 1;
     }
 
 }
@@ -39,13 +42,15 @@ fn __jazz_poly_compress4(reg u32 des, reg u32 src){
 
     reg u32[4] a;
     reg u32 b;
+    reg u32 i;
 
-    inline int i j;
+    inline int j;
 
     b = #MOV(20642679 % 65536);
     b = #MOVT(b, 20642679 / 65536);
 
-    for i = 0 to 64 {
+    i = 0;
+    while(i < 64){
 
         for j = 0 to 4 {
             a[j] = (32s)(u16)[src + j * 2];
@@ -64,6 +69,7 @@ fn __jazz_poly_compress4(reg u32 des, reg u32 src){
         (u16)[des] = (16u)a[0];
         des += 2;
 
+        i += 1;
     }
 
 }
@@ -73,13 +79,15 @@ fn __jazz_poly_compress10(reg u32 des, reg u32 src){
 
     reg u32[4] a;
     reg u32 b;
+    reg u32 i;
 
     b = #MOV(1321131424 % 65536);
     b = #MOVT(b, 1321131424 / 65536);
 
-    inline int i j;
+    inline int j;
 
-    for i = 0 to 64 {
+    i = 0;
+    while(i < 64){
 
         for j = 0 to 4 {
             a[j] = (32s)(u16)[src + j * 2];
@@ -100,6 +108,7 @@ fn __jazz_poly_compress10(reg u32 des, reg u32 src){
         (u8)[des + 4] = (8u)a[3];
         des += 5;
 
+        i += 1;
     }
 
 }
