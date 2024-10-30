@@ -251,7 +251,7 @@ void poly_compress11(uint8_t r[352], const int16_t a[KYBER_N]){
 
 }
 
-// extern void __asm_poly_compress1(uint8_t *des, int16_t *src);
+extern void __jazz_poly_compress1(uint8_t *des, int16_t *src);
 // extern void __asm_poly_compress4(uint8_t *des, int16_t *src);
 // extern void __asm_poly_compress10(uint8_t *des, int16_t *src);
 
@@ -270,11 +270,16 @@ int main(void){
 // Polynomial compression
 
     poly_compress1(ref, a);
+    __jazz_poly_compress1(res, a);
+    assert(memcmp(ref, res, 32) == 0);
 
     poly_compress4(ref, a);
-
+    // __jazz_poly_compress4(res, a);
+    // assert(memcmp(ref, res, 128) == 0);
 
     poly_compress10(ref, a);
+    // __jazz_poly_compress10(res, a);
+    // assert(memcmp(ref, res, 320) == 0);
 
 
     printf("Polynomial compression finished!\n");

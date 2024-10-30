@@ -28,6 +28,7 @@ jazz_avx2.s: jazz_avx2.jazz
 
 jazz_armv7e-m.s: jazz_armv7e-m.jazz
 	$(JASMINC) -arch=arm-m4 $< -o $@
+	sh ./edit_jazz_obj.sh
 
 test: test.c
 	$(CC) $(CFLAGS) $< -o $@
@@ -75,4 +76,4 @@ clean:
 	rm -f armv7e-m
 	rm -f jazz_armv7e-m
 	rm -f $(JAZZ_ARMv7E-M_OBJ)
-	
+
