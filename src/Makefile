@@ -12,7 +12,11 @@ AVX2_FLAGS = -mavx2 -z noexecstack
 
 JASMINC = jasminc
 
-JAZZ_OBJ = jazz_x86.s jazz_avx2.s
+JAZZ_X86_OBJ = jazz_x86.s
+
+JAZZ_AVX2_OBJ = jazz_avx2.s
+
+JAZZ_ARMv7E-M_OBJ = jazz_armv7e-m.s
 
 all: test avx2_ref neon_ref armv7e-m_ref
 
@@ -21,6 +25,9 @@ jazz_x86.s: jazz_x86.jazz
 
 jazz_avx2.s: jazz_avx2.jazz
 	$(JASMINC) $< -o $@
+
+jazz_armv7e-m.s: jazz_armv7e-m.jazz
+	$(JASMINC) -arch=arm-m4 $< -o $@
 
 test: test.c
 	$(CC) $(CFLAGS) $< -o $@
@@ -35,7 +42,10 @@ jazz_x86: jazz_x86.c jazz_x86.jazz jazz_x86.s
 	$(CC) $(CFLAGS) jazz_x86.s $< -o $@
 
 jazz_avx2: jazz_avx2.c jazz_avx2.jazz jazz_avx2.s
-	$(CC) $(AVX2_FAGS) jazz_avx2.s $< -o $@
+	$(CC) $(CFLAGS) $(AVX2_FAGS) jazz_avx2.s $< -o $@
+
+jazz_armv7e-m: jazz_armv7e-m.c jazz_armv7e-m.jazz jazz_armv7e-m.s
+	$(AARCH32_CROSS_CC) $(CFLAGS) $(AARCH32_CROSS_FLAGS) jazz_armv7e-m.s $< -o $@
 
 neon_ref: neon_ref.c
 	$(CC) $(CFLAGS) $< -o $@
@@ -45,7 +55,6 @@ neon: neon.c
 
 armv7e-m_ref: armv7e-m_ref.c
 	$(CC) $(CFLAGS) $< -o $@
-
 
 armv7e-m: armv7e-m.c $(AARCH32_ASM)
 	$(AARCH32_CROSS_CC) $(CFLAGS) $(AARCH32_CROSS_FLAGS) $(AARCH32_ASM) $< -o $@
@@ -58,8 +67,12 @@ clean:
 	rm -f avx2
 	rm -f jazz_x86
 	rm -f jazz_avx2
-	rm -f $(JAZZ_OBJ)
+	rm -f $(JAZZ_X86_OBJ)
+	rm -f $(JAZZ_AVX2_OBJ)
 	rm -f neon_ref
 	rm -f neon
 	rm -f armv7e-m_ref
 	rm -f armv7e-m
+	rm -f jazz_armv7e-m
+	rm -f $(JAZZ_ARMv7E-M_OBJ)
+	
