@@ -1,35 +1,11 @@
 
-inline
-fn __compress1x8(stack u16[8] src, reg u32 b) -> reg u32 {
-
-    reg u32[8] a;
-    reg u32 t;
-    inline int j;
-
-    for j = 0 to 8 {
-        a[j] = (32s)src[j];
-    }
-
-    for j = 0 to 8 {
-        a[j] = #SMMULR(a[j], b);
-        a[j] = #UBFX(a[j], 0, 1);
-    }
-
-    for j = 1 to 8 {
-        a[0] |= a[j] << j;
-    }
-
-    t = a[0];
-
-    return t;
-
-}
-
 export
 fn __jazz_poly_compress1(reg u32 des, reg u32 src){
 
-    reg u32 b t i;
-    stack u16[8] buff;
+    reg u32[8] a;
+    reg u32 b;
+    reg u32 i;
+
     inline int j;
 
     // 2580335 = round(2^33 / 3329)
@@ -40,52 +16,34 @@ fn __jazz_poly_compress1(reg u32 des, reg u32 src){
     while(i < 32){
 
         for j = 0 to 8 {
-            t = (32u)(u16)[src + j * 2];
-            buff[j] = t;
+            a[j] = (32s)(u16)[src + j * 2];
+        }
+        src += 8 * 2;
+
+        for j = 0 to 8 {
+            a[j] = #SMMULR(a[j], b);
+            a[j] = #UBFX(a[j], 0, 1);
         }
 
-        t = __compress1x8(buff, b);
+        for j = 1 to 8 {
+            a[0] |= (a[j] << j);
+        }
 
-        (u8)[des] = t;
-
-        src += 8 * 2;
+        (u8)[des] = (8u)a[0];
         des += 1;
+
         i += 1;
     }
-
-}
-
-inline
-fn __compress4x4(stack u16[4] src, reg u32 b) -> reg u32 {
-
-    reg u32[4] a;
-    reg u32 t;
-    inline int j;
-
-    for j = 0 to 4 {
-        a[j] = (32s)src[j];
-    }
-
-    for j = 0 to 4 {
-        a[j] = #SMMULR(a[j], b);
-        a[j] = #UBFX(a[j], 0, 4);
-    }
-
-    for j = 1 to 4 {
-        a[0] |= a[j] << (4 * j);
-    }
-
-    t = a[0];
-
-    return t;
 
 }
 
 export
 fn __jazz_poly_compress4(reg u32 des, reg u32 src){
 
-    reg u32 b t i;
-    stack u16[4] buff;
+    reg u32[4] a;
+    reg u32 b;
+    reg u32 i;
+
     inline int j;
 
     b = #MOV(20642679 % 65536);
@@ -95,74 +53,61 @@ fn __jazz_poly_compress4(reg u32 des, reg u32 src){
     while(i < 64){
 
         for j = 0 to 4 {
-            t = (32u)(u16)[src + j * 2];
-            buff[j] = t;
+            a[j] = (32s)(u16)[src + j * 2];
+        }
+        src += 4 * 2;
+
+        for j = 0 to 4 {
+            a[j] = #SMMULR(a[j], b);
+            a[j] = #UBFX(a[j], 0, 4);
         }
 
-        t = __compress4x4(buff, b);
+        for j = 1 to 4 {
+            a[0] |= a[j] << (4 * j);
+        }
 
-        (u16)[des] = t;
-
-        src += 4 * 2;
+        (u16)[des] = (16u)a[0];
         des += 2;
+
         i += 1;
     }
-
-}
-
-inline
-fn __compress10x4(stack u16[4] src, reg u32 b) -> reg u32, reg u32 {
-
-    reg u32[4] a;
-    reg u32 t0 t1;
-    inline int j;
-
-    for j = 0 to 4 {
-        a[j] = (32s)src[j];
-    }
-
-    for j = 0 to 4 {
-        a[j] = #SMMULR(a[j], b);
-        a[j] = #UBFX(a[j], 0, 10);
-    }
-
-    for j = 1 to 4 {
-        a[0] |= a[j] << (10 * j);
-    }
-    a[3] >>= 2;
-
-    t0 = a[0];
-    t1 = a[3];
-
-    return t0, t1;
 
 }
 
 export
 fn __jazz_poly_compress10(reg u32 des, reg u32 src){
 
-    reg u32 b t0 t1 i;
-    stack u16[4] buff;
-    inline int j;
+    reg u32[4] a;
+    reg u32 b;
+    reg u32 i;
 
     b = #MOV(1321131424 % 65536);
     b = #MOVT(b, 1321131424 / 65536);
+
+    inline int j;
 
     i = 0;
     while(i < 64){
 
         for j = 0 to 4 {
-            t0 = (32s)(u16)[src + j * 2];
-            buff[j] = t0;
+            a[j] = (32s)(u16)[src + j * 2];
+        }
+        src += 4 * 2;
+
+        for j = 0 to 4 {
+            a[j] = #SMMULR(a[j], b);
+            a[j] = #UBFX(a[j], 0, 10);
         }
 
-        t0, t1 = __compress10x4(buff, b);
+        for j = 1 to 4 {
+            a[0] |= a[j] << (10 * j);
+        }
+        a[3] >>= 2;
 
-        [des] = t0;
-        (u8)[des + 4] = t1;
-
-        src += 4 * 2;
+        [des] = a[0];
+        (u8)[des + 4] = (8u)a[3];
         des += 5;
+
         i += 1;
     }
 
