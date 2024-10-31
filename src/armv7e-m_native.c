@@ -270,6 +270,8 @@ int main(void){
         a[i] -= KYBER_Q / 2;
     }
 
+    hal_setup(CLOCK_FAST);
+
 // ================
 // Compression
 

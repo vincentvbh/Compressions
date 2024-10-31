@@ -105,6 +105,9 @@ jazz_avx2: jazz_avx2.c jazz_avx2.jazz jazz_avx2.s
 jazz_armv7e-m: jazz_armv7e-m.c jazz_armv7e-m.jazz jazz_armv7e-m.s
 	$(AARCH32_CROSS_CC) $(CFLAGS) $(AARCH32_CROSS_FLAGS) jazz_armv7e-m.s $< -o $@
 
+jazz_armv7e-m_native.elf: jazz_armv7e-m_native.o jazz_armv7e-m.c jazz_armv7e-m.jazz jazz_armv7e-m.s $(OPENCM3_OBJS) $(ARMv7-M_CROSS_LDSCRIPT)
+	$(ARMv7-M_CROSS_CC) $(OPENCM3_OBJS) jazz_armv7e-m.s $< -o $@ $(ARMv7-M_CROSS_LDFLAGS) -l$(OPENCM3_LIBNAME)
+
 neon_ref: neon_ref.c
 	$(CC) $(CFLAGS) $< -o $@
 

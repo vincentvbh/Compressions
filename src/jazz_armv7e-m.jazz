@@ -412,7 +412,7 @@ fn __polyvec_compress10(reg u32 des, stack u16[KYBER_VECN] src){
 }
 
 inline
-fn __i_polyvec_compress10(reg ptr u8[320] des, stack u16[KYBER_VECN] src) -> reg ptr u8[320] {
+fn __i_polyvec_compress10(reg ptr u8[960] des, stack u16[KYBER_VECN] src) -> reg ptr u8[960] {
 
     reg u32[4] a;
     reg u32 b;
