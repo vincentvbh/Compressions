@@ -24,3 +24,6 @@ Inside the folder `src`, run
 ```
 Test finished!
 ```
+
+# TODO
+Sync naming conventions.

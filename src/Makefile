@@ -140,5 +140,5 @@ clean:
 	rm -f armv7e-m_native
 	rm -f jazz_armv7e-m
 	rm -f $(JAZZ_ARMv7E-M_OBJ)
-	rm -f *.o *.d *.elf
+	rm -f *.o *.d *.elf *.bin
 
