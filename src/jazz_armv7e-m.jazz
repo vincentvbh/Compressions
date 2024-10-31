@@ -2,6 +2,7 @@
 inline
 fn __compress1x8(reg u32 a0 a1 a2 a3 a4 a5 a6 a7 b) -> reg u32 {
 
+    // -1290167 <= ai <= 1290167
     a0 = #SMMULR(a0, b);
     a1 = #SMMULR(a1, b);
     a2 = #SMMULR(a2, b);
@@ -19,6 +20,7 @@ fn __compress1x8(reg u32 a0 a1 a2 a3 a4 a5 a6 a7 b) -> reg u32 {
     a5 = #UBFX(a5, 0, 1);
     a6 = #UBFX(a6, 0, 1);
     a7 = #UBFX(a7, 0, 1);
+    // We have round(ai * 2^10 / 3329) mod^+ 2^10 now.
 
     a0 |= a1 << 1;
     a0 |= a2 << 2;
@@ -133,6 +135,7 @@ fn __jazz_stack_poly_compress1(reg u32 des, reg u32 src){
 inline
 fn __compress4x4(reg u32 a0 a1 a2 a3 b) -> reg u32 {
 
+    // -1290167 <= ai <= 1290167
     a0 = #SMMULR(a0, b);
     a1 = #SMMULR(a1, b);
     a2 = #SMMULR(a2, b);
@@ -142,6 +145,7 @@ fn __compress4x4(reg u32 a0 a1 a2 a3 b) -> reg u32 {
     a1 = #UBFX(a1, 0, 4);
     a2 = #UBFX(a2, 0, 4);
     a3 = #UBFX(a3, 0, 4);
+    // We have round(ai * 2^10 / 3329) mod^+ 2^10 now.
 
     a0 |= a1 << 4;
     a0 |= a2 << 8;
@@ -250,6 +254,7 @@ fn __jazz_stack_poly_compress4(reg u32 des, reg u32 src){
 inline
 fn __compress10x4(reg u32 a0 a1 a2 a3 b) -> reg u32, reg u32 {
 
+    // -1290167 <= ai <= 1290167
     a0 = #SMMULR(a0, b);
     a1 = #SMMULR(a1, b);
     a2 = #SMMULR(a2, b);
@@ -259,6 +264,7 @@ fn __compress10x4(reg u32 a0 a1 a2 a3 b) -> reg u32, reg u32 {
     a1 = #UBFX(a1, 0, 10);
     a2 = #UBFX(a2, 0, 10);
     a3 = #UBFX(a3, 0, 10);
+    // We have round(ai * 2^10 / 3329) mod^+ 2^10 now.
 
     a0 |= a1 << 10;
     a0 |= a2 << 20;
