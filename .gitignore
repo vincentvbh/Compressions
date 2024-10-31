@@ -14,3 +14,8 @@
 **/armv7e-m
 **/jazz_armv7e-m.s
 **/jazz_armv7e-m
+
+**/*.o
+**/*.d
+**/*.elf
+**/*.bin
