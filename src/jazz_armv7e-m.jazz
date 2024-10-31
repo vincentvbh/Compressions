@@ -1,4 +1,8 @@
 
+param int KYBER_Q = 3329;
+param int KYBER_N = 256;
+param int KYBER_K = 3;
+
 inline
 fn __compress1x8(reg u32 a0 a1 a2 a3 a4 a5 a6 a7 b) -> reg u32 {
 
@@ -35,7 +39,7 @@ fn __compress1x8(reg u32 a0 a1 a2 a3 a4 a5 a6 a7 b) -> reg u32 {
 }
 
 inline
-fn __poly_compress1(reg u32 des, stack u16[256] src){
+fn __poly_compress1(reg u32 des, stack u16[KYBER_N] src){
 
     reg u32[8] a;
     reg u32 b;
@@ -62,7 +66,7 @@ fn __poly_compress1(reg u32 des, stack u16[256] src){
 }
 
 inline
-fn __i_poly_compress1(reg ptr u8[32] des, stack u16[256] src) -> reg ptr u8[32] {
+fn __i_poly_compress1(reg ptr u8[32] des, stack u16[KYBER_N] src) -> reg ptr u8[32] {
 
     reg u32[8] a;
     reg u32 b;
@@ -93,11 +97,11 @@ export
 fn __jazz_poly_compress1(reg u32 des, reg u32 src){
 
     reg u32 t;
-    stack u16[256] buff;
+    stack u16[KYBER_N] buff;
 
     inline int i;
 
-    for i = 0 to 256 {
+    for i = 0 to KYBER_N {
         t = (32u)(u16)[src + i * 2];
         buff[i] = (16u)t;
     }
@@ -111,12 +115,12 @@ fn __jazz_stack_poly_compress1(reg u32 des, reg u32 src){
 
     reg u32 t;
     reg ptr u8[32] des_buff_ptr;
-    stack u16[256] buff;
+    stack u16[KYBER_N] buff;
     stack u8[32] des_buff;
 
     inline int i;
 
-    for i = 0 to 256 {
+    for i = 0 to KYBER_N {
         t = (32u)(u16)[src + i * 2];
         buff[i] = (16u)t;
     }
@@ -156,7 +160,7 @@ fn __compress4x4(reg u32 a0 a1 a2 a3 b) -> reg u32 {
 }
 
 inline
-fn __poly_compress4(reg u32 des, stack u16[256] src){
+fn __poly_compress4(reg u32 des, stack u16[KYBER_N] src){
 
     reg u32[4] a;
     reg u32 b;
@@ -182,7 +186,7 @@ fn __poly_compress4(reg u32 des, stack u16[256] src){
 }
 
 inline
-fn __i_poly_compress4(reg ptr u8[128] des, stack u16[256] src) -> reg ptr u8[128] {
+fn __i_poly_compress4(reg ptr u8[128] des, stack u16[KYBER_N] src) -> reg ptr u8[128] {
 
     reg u32[4] a;
     reg u32 b;
@@ -212,11 +216,11 @@ export
 fn __jazz_poly_compress4(reg u32 des, reg u32 src){
 
     reg u32 t;
-    stack u16[256] buff;
+    stack u16[KYBER_N] buff;
 
     inline int i;
 
-    for i = 0 to 256 {
+    for i = 0 to KYBER_N {
         t = (32u)(u16)[src + i * 2];
         buff[i] = (16u)t;
     }
@@ -230,12 +234,12 @@ fn __jazz_stack_poly_compress4(reg u32 des, reg u32 src){
 
     reg u32 t;
     reg ptr u8[128] des_buff_ptr;
-    stack u16[256] buff;
+    stack u16[KYBER] buff;
     stack u8[128] des_buff;
 
     inline int i;
 
-    for i = 0 to 256 {
+    for i = 0 to KYBER_N {
         t = (32u)(u16)[src + i * 2];
         buff[i] = (16u)t;
     }
@@ -276,7 +280,7 @@ fn __compress10x4(reg u32 a0 a1 a2 a3 b) -> reg u32, reg u32 {
 }
 
 inline
-fn __poly_compress10(reg u32 des, stack u16[256] src){
+fn __poly_compress10(reg u32 des, stack u16[KYBER_N] src){
 
     reg u32[4] a;
     reg u32 b;
@@ -303,7 +307,7 @@ fn __poly_compress10(reg u32 des, stack u16[256] src){
 }
 
 inline
-fn __i_poly_compress10(reg ptr u8[320] des, stack u16[256] src) -> reg ptr u8[320] {
+fn __i_poly_compress10(reg ptr u8[320] des, stack u16[KYBER_N] src) -> reg ptr u8[320] {
 
     reg u32[4] a;
     reg u32 b;
@@ -334,11 +338,11 @@ export
 fn __jazz_poly_compress10(reg u32 des, reg u32 src){
 
     reg u32 t;
-    stack u16[256] buff;
+    stack u16[KYBER_N] buff;
 
     inline int i;
 
-    for i = 0 to 256 {
+    for i = 0 to KYBER_N {
         t = (32u)(u16)[src + i * 2];
         buff[i] = (16u)t;
     }
@@ -352,12 +356,12 @@ fn __jazz_stack_poly_compress10(reg u32 des, reg u32 src){
 
     reg u32 t;
     reg ptr u8[320] des_buff_ptr;
-    stack u16[256] buff;
+    stack u16[KYBER_N] buff;
     stack u8[320] des_buff;
 
     inline int i;
 
-    for i = 0 to 256 {
+    for i = 0 to KYBER_N {
         t = (32u)(u16)[src + i * 2];
         buff[i] = (16u)t;
     }
