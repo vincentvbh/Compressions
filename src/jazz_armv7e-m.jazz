@@ -28,6 +28,7 @@ fn __compress1x8(reg u32 a0 a1 a2 a3 a4 a5 a6 a7 b) -> reg u32 {
     a7 = #UBFX(a7, 0, 1);
     // We have round(ai * 2^10 / 3329) mod^+ 2^10 now.
 
+    // We pack the lowest 1-bits into a byte.
     a0 |= a1 << 1;
     a0 |= a2 << 2;
     a0 |= a3 << 3;
@@ -153,6 +154,7 @@ fn __compress4x4(reg u32 a0 a1 a2 a3 b) -> reg u32 {
     a3 = #UBFX(a3, 0, 4);
     // We have round(ai * 2^10 / 3329) mod^+ 2^10 now.
 
+    // We pack the lowest 4-bits into a halfword.
     a0 |= a1 << 4;
     a0 |= a2 << 8;
     a0 |= a3 << 12;
@@ -272,11 +274,14 @@ fn __compress10x4(reg u32 a0 a1 a2 a3 b) -> reg u32, reg u32 {
     a3 = #UBFX(a3, 0, 10);
     // We have round(ai * 2^10 / 3329) mod^+ 2^10 now.
 
+    // We pack the lowest 10-bits into a word and a byte.
     a0 |= a1 << 10;
     a0 |= a2 << 20;
     a0 |= a3 << 30;
     a3 >>= 2;
 
+    // The first register contains the lowest 32 bits of the packed value,
+    // and the second register contains the next 8 bits.
     return a0, a3;
 
 }
@@ -372,7 +377,7 @@ fn __jazz_stack_poly_compress10(reg u32 des, reg u32 src){
     des_buff_ptr = __i_poly_compress10(des_buff_ptr, buff);
     des_buff = des_buff_ptr;
 
-    for i = 0 to 32 {
+    for i = 0 to 320 {
         t = (32u)des_buff[i];
         (u8)[des + i] = t;
     }
@@ -455,9 +460,9 @@ export
 fn __jazz_stack_polyvec_compress10(reg u32 des, reg u32 src){
 
     reg u32 t;
-    reg ptr u8[320] des_buff_ptr;
+    reg ptr u8[960] des_buff_ptr;
     stack u16[KYBER_VECN] buff;
-    stack u8[320] des_buff;
+    stack u8[960] des_buff;
 
     inline int i;
 
@@ -470,7 +475,7 @@ fn __jazz_stack_polyvec_compress10(reg u32 des, reg u32 src){
     des_buff_ptr = __i_polyvec_compress10(des_buff_ptr, buff);
     des_buff = des_buff_ptr;
 
-    for i = 0 to 32 {
+    for i = 0 to 960 {
         t = (32u)des_buff[i];
         (u8)[des + i] = t;
     }
