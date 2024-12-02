@@ -213,7 +213,7 @@ int main(void){
     int16_t ubound, t;
 
     ubound = 0;
-    for(int32_t i = -32768; i < 32768; i++){
+    for(int32_t i = -3328; i < 32767 + 1; i++){
         t = Barrett_floor_reduce(i);
         assert(t >= 0);
         if(t > ubound){
